@@ -15,6 +15,7 @@
 
 #include <string>
 #include <iomanip>
+#include <conio.h>
 #include <map>
 #include <sstream>
 #include <vector>
@@ -85,7 +86,9 @@ namespace UI
 	string Format(unsigned n, unsigned w);
 }
 
-typedef void(*MenuFunction)(void);
+class HSystem;
+
+typedef void(*MenuFunction)();
 
 class Menu
 {
@@ -172,20 +175,12 @@ public:
 
 	__forceinline void addItem(char c, const string& desc)
 	{
-		pair<char, string> newPair = make_pair(c, desc);
-
-		if (find(_menu.begin(), _menu.end(), newPair) == _menu.end())
-		{
-			_menu.push_back(newPair);
-		}
+		_menu.push_back(make_pair(c, desc));
 	}
 
 	__forceinline void addHandler(char c, MenuFunction func)
 	{
-		if (_func.find(c) == _func.end())
-		{
-			_func.insert(make_pair(c, func));
-		}
+		_func.insert(make_pair(c, func));
 	}
 
 	void run()
@@ -221,7 +216,7 @@ private:
 	string menuTop;
 	string menuBottom;
 	string menuSeparator;
-
+	
 	vector<pair<char, string> >_menu;
 	map<char, MenuFunction> _func;
 };

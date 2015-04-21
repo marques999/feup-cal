@@ -36,16 +36,22 @@ bool Vertex<T>::removeEdgeTo(Vertex<T> *dst)
 {
 	dst->indegree--;
 
-	typename vector<Edge<T> >::iterator it = find_if(adj.begin(), adj.end(), [](const Vertex* &v) { v->info == dst->info });
+	vector<Edge<T> >::iterator it = adj.begin();
+	vector<Edge<T> >::iterator ite = adj.end();
 
-	if (it == adj.end())
+	while (it != ite)
 	{
-		return false;
+		if (it->dest->info == dst->info)
+		{
+			adj.erase(it);
+
+			return true;
+		}
+
+		it++;
 	}
 
-	adj.erase(it);
-
-	return true;
+	return false;
 }
 
 template <class T>

@@ -14,19 +14,19 @@ public:
 	{
 	}
 
-	string getName()
+	string getName() const
 	{
 		return name;
 	}
 
-	double getTemperature()
+	double getTemperature() const
 	{
 		return temperature;
 	}
-	
-	bool operator==(const Room &r)
+
+	bool operator==(const Room &rhs) const
 	{
-		return name == r.name;
+		return name == rhs.name;
 	}
 
 private:

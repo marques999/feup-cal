@@ -1,26 +1,54 @@
-#include <iostream>
-#include <fstream>
-#include <conio.h>
+#include "HSystem.h"
 #include "Menu.h"
-#include "Graph.h"
+#include "Exceptions.h"
+HSystem* hSystem = nullptr;
 
-using namespace std;
-
-void helloWorld()
+__forceinline void hSystem_addRoom()
 {
-	cout << "Hello world!" << endl;
-	system("pause");
+	if (hSystem != nullptr)
+	{
+		hSystem->addRoom();
+	}
 }
 
-void helloHell()
+__forceinline void hSystem_addConnection()
 {
-	cout << "HELL0A S9V0AS9GFS0A9GS" << endl;
-	system("pause");
+	if (hSystem != nullptr)
+	{
+		hSystem->addConnection();
+	}
 }
 
-void exportGraph()
+__forceinline void hSystem_removeRoom()
 {
-	cout << "Exporting raph as html.." << endl;
+	if (hSystem != nullptr)
+	{
+		hSystem->removeRoom();
+	}
+}
+
+__forceinline void hSystem_removeConnection()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->removeEdge();
+	}
+}
+
+__forceinline void hSystem_enableRadiator()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->enableRoom();
+	}
+}
+
+__forceinline void hSystem_disableRadiator()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->disableRoom();
+	}
 }
 
 void settingsMenu()
@@ -29,16 +57,37 @@ void settingsMenu()
 
 	settingsMenu.setWidth(40);
 	settingsMenu.addItem('1', "Create room");
+	settingsMenu.addHandler('1', hSystem_addRoom);
 	settingsMenu.addItem('2', "Remove room");
+	settingsMenu.addHandler('2', hSystem_removeRoom);
 	settingsMenu.addSeparator();
 	settingsMenu.addItem('3', "Create connection");
+	settingsMenu.addHandler('3', hSystem_addConnection);
 	settingsMenu.addItem('4', "Remove connection");
+	settingsMenu.addHandler('4', hSystem_removeConnection);
 	settingsMenu.addSeparator();
-	settingsMenu.addItem('5', "Disable radiador");
+	settingsMenu.addItem('5', "Disable radiator");
+	settingsMenu.addHandler('5', hSystem_disableRadiator);
+	settingsMenu.addItem('6', "Enable radiator");
+	settingsMenu.addHandler('6', hSystem_enableRadiator);
 	settingsMenu.addSeparator();
-	settingsMenu.addItem('6', "<- Back");
-	settingsMenu.addHandler('6', nullptr);
-	settingsMenu.run();
+	settingsMenu.addItem('7', "<- Back");
+	settingsMenu.addHandler('7', nullptr);
+
+	try 
+	{
+		settingsMenu.run();
+	}
+	catch (SourceRoomNotFound &srnf)
+	{
+		cout << endl << srnf << endl;
+		system("pause");
+	}
+	catch (DestinationRoomNotFound &drnf)
+	{
+		cout << endl << drnf << endl;
+		system("pause");
+	}
 }
 
 void mainMenu()
@@ -48,37 +97,18 @@ void mainMenu()
 	mainMenu.setWidth(40);
 	mainMenu.addItem('1', "View House");
 	mainMenu.addItem('2', "Edit House");
+	mainMenu.addHandler('2', settingsMenu);
 	mainMenu.addItem('3', "Export graph");
 	mainMenu.addItem('4', "Reset");
 	mainMenu.addSeparator();
 	mainMenu.addItem('5', "Exit");
-	mainMenu.addHandler('1', helloWorld);
-	mainMenu.addHandler('2', settingsMenu);
-	mainMenu.addHandler('3', exportGraph);
 	mainMenu.addHandler('5', nullptr);
 	mainMenu.run();
 }
 
 int main()
 {
-	Graph<int> gf;
-
-	gf.addVertex(4);
-	gf.addVertex(2);
-	gf.addVertex(3);
-	gf.addEdge(2, 3, 3.0);
-	gf.addEdge(3, 4, 2.0);
-	gf.addEdge(2, 4, 1.0);
-	
-	vector<int> v = gf.topologicalOrder();
-	
-	for (const int &x : v)
-	{
-		cout << x << endl;
-	}
-
-
-	//mainMenu();
-
+	hSystem =new  HSystem();
+	mainMenu();
 	return 0;
 }

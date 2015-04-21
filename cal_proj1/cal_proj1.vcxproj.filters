@@ -30,6 +30,12 @@
     <ClCompile Include="Menu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="graphviewer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="connection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Menu.h">
@@ -45,6 +51,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Room.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Exceptions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="connection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="edgetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graphviewer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

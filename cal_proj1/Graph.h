@@ -31,12 +31,15 @@ protected:
 	unsigned nextID;
 
 public:
-	bool addVertex(const T &in);
+
+	int addVertex(const T &in);
 	bool addEdge(const T &sourc, const T &dest, double w);
-	bool removeVertex(const T &in);
+	int removeVertex(const T &in);
 	bool removeEdge(const T &sourc, const T &dest);
+
 	vector<T> dfs() const;
 	vector<T> bfs(Vertex<T> *v) const;
+
 	int maxNewChildren(Vertex<T> *v, T &inf) const;
 	vector<Vertex<T> * > getVertices() const;
 	int getNumVertex() const;
@@ -65,23 +68,26 @@ vector<Vertex<T>* > Graph<T>::getVertices() const
 }
 
 template <class T>
-bool Graph<T>::addVertex(const T &in)
+int Graph<T>::addVertex(const T &in)
 {
 	for (Vertex<T>* &v : vertices)
 	{
 		if (v->info == in)
 		{
-			return false;
+			return -1;
 		}
 	}
 
-	vertices.push_back(new Vertex<T>(in));
+	Vertex<T>* newVertex = new Vertex<T>(in);
 
-	return true;
+	newVertex->id = nextID++;
+	vertices.push_back(newVertex);
+
+	return newVertex->id;
 }
 
 template <class T>
-bool Graph<T>::removeVertex(const T &in)
+int Graph<T>::removeVertex(const T &in)
 {
 	typename vector<Vertex<T>*>::iterator it = vertices.begin();
 	typename vector<Vertex<T>*>::iterator ite = vertices.end();
@@ -110,13 +116,15 @@ bool Graph<T>::removeVertex(const T &in)
 				it2->dest->indegree--;
 			}
 
+			unsigned id = v->id;
+
 			delete v;
 
-			return true;
+			return id;
 		}
 	}
 
-	return false;
+	return -1;
 }
 
 template <class T>
@@ -309,17 +317,17 @@ int Graph<T>::maxNewChildren(Vertex<T> *v, T &inf) const
 }
 
 template <class T>
-Vertex<T>* Graph<T>::getVertex(const T &v) const
+Vertex<T>* Graph<T>::getVertex(const T &src) const
 {
-	for (const Vertex<T>* &v : vertices)
+	for (Vertex<T>* v : vertices)
 	{
-		if (v->info == v)
+		if (v->info == src)
 		{
 			return v;
 		}
 	}
 
-	return 0;
+	return nullptr;
 }
 
 template<class T>
@@ -367,7 +375,7 @@ int Graph<T>::getNumCycles()
 template <class T>
 bool Graph<T>::isDAG()
 {
-	return getNumCycles() == 0;
+	return !getNumCycles();
 }
 
 template <class T>
@@ -466,7 +474,7 @@ void Graph<T>::unweightedShortestPath(const T &src)
 {
 	for (Vertex<T>* v : vertices)
 	{
-		v->path = 0;
+		v->path = nullptr;
 		v->dist = INT_MAX;
 	}
 
@@ -500,7 +508,7 @@ void Graph<T>::getPathTo(Vertex<T> *dst, list<T> &res)
 {
 	res.push_back(dst->info);
 
-	if (dst->path != 0)
+	if (dst->path != nullptr)
 	{
 		getPathTo(dst->path, res);
 	}
