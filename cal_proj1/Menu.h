@@ -188,6 +188,7 @@ public:
 		while (true)
 		{
 			system("cls");
+			cout << "\n\n\n\n";
 			displayMenu();
 
 			char c = _getch();

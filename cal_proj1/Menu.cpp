@@ -1,6 +1,7 @@
 #include "HSystem.h"
 #include "Menu.h"
 #include "Exceptions.h"
+
 HSystem* hSystem = nullptr;
 
 __forceinline void hSystem_addRoom()
@@ -31,7 +32,7 @@ __forceinline void hSystem_removeConnection()
 {
 	if (hSystem != nullptr)
 	{
-		hSystem->removeEdge();
+		hSystem->removeConnection();
 	}
 }
 
@@ -51,6 +52,30 @@ __forceinline void hSystem_disableRadiator()
 	}
 }
 
+__forceinline void hSystem_changeTemperature()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->changeTemperature();
+	}
+}
+
+__forceinline void hSystem_resetFlow()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->resetFlow();
+	}
+}
+
+__forceinline void hSystem_displayInfo()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->displayInfo();
+	}
+}
+
 void settingsMenu()
 {
 	Menu settingsMenu("Settings");
@@ -58,21 +83,27 @@ void settingsMenu()
 	settingsMenu.setWidth(40);
 	settingsMenu.addItem('1', "Create room");
 	settingsMenu.addHandler('1', hSystem_addRoom);
-	settingsMenu.addItem('2', "Remove room");
-	settingsMenu.addHandler('2', hSystem_removeRoom);
+	settingsMenu.addItem('2', "Change temperature");
+	settingsMenu.addHandler('2', hSystem_changeTemperature);
+	settingsMenu.addItem('3', "Remove room");
+	settingsMenu.addHandler('3', hSystem_removeRoom);
 	settingsMenu.addSeparator();
-	settingsMenu.addItem('3', "Create connection");
-	settingsMenu.addHandler('3', hSystem_addConnection);
-	settingsMenu.addItem('4', "Remove connection");
-	settingsMenu.addHandler('4', hSystem_removeConnection);
+	settingsMenu.addItem('4', "Create connection");
+	settingsMenu.addHandler('4', hSystem_addConnection);
+	settingsMenu.addItem('5', "Remove connection");
+	settingsMenu.addHandler('5', hSystem_removeConnection);
 	settingsMenu.addSeparator();
-	settingsMenu.addItem('5', "Disable radiator");
-	settingsMenu.addHandler('5', hSystem_disableRadiator);
-	settingsMenu.addItem('6', "Enable radiator");
-	settingsMenu.addHandler('6', hSystem_enableRadiator);
+	settingsMenu.addItem('6', "Disable radiator");
+	settingsMenu.addHandler('6', hSystem_disableRadiator);
+	settingsMenu.addItem('7', "Enable radiator");
+	settingsMenu.addHandler('7', hSystem_enableRadiator);
+	settingsMenu.addItem('8', "Reset flow");
+	settingsMenu.addHandler('8', hSystem_resetFlow);
+	settingsMenu.addItem('9', "Display information");
+	settingsMenu.addHandler('9', hSystem_displayInfo);
 	settingsMenu.addSeparator();
-	settingsMenu.addItem('7', "<- Back");
-	settingsMenu.addHandler('7', nullptr);
+	settingsMenu.addItem('0', "<- Back");
+	settingsMenu.addHandler('0', nullptr);
 
 	try 
 	{

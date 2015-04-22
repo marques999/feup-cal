@@ -6,6 +6,10 @@ class Room
 {
 public:
 
+	Room() : name(""), temperature(20.0)
+	{
+	}
+
 	Room(const string &s) : name(s), temperature(20.0)
 	{
 	}
@@ -19,9 +23,24 @@ public:
 		return name;
 	}
 
+	bool isEnabled() const
+	{
+		return enabled;
+	}
+
+	void toggleStatus()
+	{
+		enabled = !enabled;
+	}
+
 	double getTemperature() const
 	{
 		return temperature;
+	}
+
+	void setTemperature(double newTemperature)
+	{
+		temperature = newTemperature;
 	}
 
 	bool operator==(const Room &rhs) const
@@ -32,5 +51,6 @@ public:
 private:
 
 	string name;
+	bool enabled;
 	double temperature;
 };

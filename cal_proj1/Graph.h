@@ -28,7 +28,7 @@ class Graph
 
 protected:
 
-	unsigned nextID;
+	unsigned nextID = 0;
 
 public:
 
@@ -46,6 +46,7 @@ public:
 
 	Vertex<T>* getVertex(const T &v) const;
 	void resetIndegrees();
+	void resetWeights(double weight);
 	vector<Vertex<T>*> getSources() const;
 	int getNumCycles();
 	bool isDAG();
@@ -65,6 +66,18 @@ template <class T>
 vector<Vertex<T>* > Graph<T>::getVertices() const
 {
 	return vertices;
+}
+
+template <class T>
+void Graph<T>::resetWeights(double weight)
+{
+	for (Vertex<T>* v : vertices)
+	{
+		for (Edge<T> &e : v->adj)
+		{
+			e.weight = weight;
+		}
+	}
 }
 
 template <class T>

@@ -10,22 +10,79 @@
 
 using namespace std;
 
+unsigned HSystem::getPositionX(int i)
+{
+	return 40 + (600 / matrixWidth) * i + ((600 / matrixWidth) * 0.5);
+}
+
+void HSystem::displayInfo()
+{
+	system("cls");
+	cout << "ROOMS:\n\n";
+
+	for (auto &r : rooms)
+	{
+		cout << r.first << " | " << r.second.getName() << " | " << r.second.getTemperature();
+		cout << endl;
+	}
+
+	cout << "\nCONNECTIONS:\n\n";
+
+	for (auto &c : connections)
+	{
+		cout << c.first << " | from Room " << c.second.first << " to Room " << c.second.second;
+		cout << endl;
+	}
+
+	system("pause");
+}
+
+unsigned HSystem::getPositionY(int j)
+{
+	return (600 / matrixHeight) * j + ((600 / matrixHeight) * 0.5);
+}
+
 void HSystem::initialize()
 {
-	gv = new GraphViewer(1280, 720, true);
+	matrixWidth = 6;
+	matrixID = 0;
+	matrixHeight = 6;
+
+	matrix.reserve(matrixHeight);
+
+	for (vector<bool> &v : matrix)
+	{
+		v.reserve(matrixWidth);
+	}
+
+	gv = new GraphViewer(600, 600, true);
 	gv->setBackground("background.jpg");
-	gv->createWindow(1280, 720);
+	gv->createWindow(600, 600);
 	gv->defineVertexColor("blue");
 	gv->defineEdgeColor("black");
 	
+	addBoiler();
+
+	nextID = 0;
+}
+
+void HSystem::addBoiler()
+{
 	Room roomCaldeira("Caldeira", 20.0);
 
+	rooms[0] = roomCaldeira;
 	g.addVertex(roomCaldeira),
-	gv->addNode(0);
+	gv->addNode(0, 20, 300);
 	gv->setVertexColor(0, "DARK_GRAY");
-	gv->setVertexLabel(0, "Caldeira");
+	gv->setVertexLabel(0, formatRoom(roomCaldeira));
 	gv->rearrange();
-	nextID = 0;
+}
+
+void HSystem::resetFlow()
+{
+	g.resetWeights(defaultWeight);
+	cout << "\nINFORMATION: weights reset successfully!\n";
+	system("pause");
 }
 
 void HSystem::setVertexColor(unsigned vertexId, double roomTemperature) const
@@ -56,13 +113,7 @@ void HSystem::setVertexColor(unsigned vertexId, double roomTemperature) const
 	}
 }
 
-void HSystem::addRoomGraphViewer(unsigned vertexId, const Room& room)
-{
-	gv->addNode(vertexId);
-	gv->setVertexLabel(vertexId, room.getName());
-	setVertexColor(vertexId, room.getTemperature());
-	gv->rearrange();
-}
+
 
 template <typename T>
 T readValue(const string& prompt, function<bool(T)> validator)
@@ -72,30 +123,30 @@ T readValue(const string& prompt, function<bool(T)> validator)
 
 	while (!success)
 	{
-		std::cout << prompt;
+		cout << prompt;
 
-		std::string input;
-		std::getline(std::cin, input);
+		string input;
+		getline(std::cin, input);
 
-		if (std::cin.fail())
+		if (cin.fail())
 		{
-			if (std::cin.eof())
+			if (cin.eof())
 			{
 				cin.clear();
 			}
 			else
 			{
 				cin.clear();
-				cout << "\nERROR: invalid value, please try again...\n";
+				cout << "\nERROR: invalid value, please try again...";
 				continue;
 			}
 		}
 
-		std::stringstream ss(input);
+		stringstream ss(input);
 
 		if (!(ss >> val) || ss.rdbuf()->in_avail() != 0)
 		{
-			cout << "\nERROR: invalid value, please try again...\n";
+			cout << "\nERROR: invalid value, please try again...";
 		}
 		else
 		{
@@ -105,7 +156,7 @@ T readValue(const string& prompt, function<bool(T)> validator)
 			}
 			else
 			{
-				cout << "\nERROR: invalid value, please try again...\n";
+				cout << "\nERROR: invalid value, please try again...";
 			}
 		}
 	}
@@ -175,7 +226,6 @@ void HSystem::removeRoom()
 
 void HSystem::disableRoom()
 {
-	// não pode ativar nem desativar a caldeira
 	string roomName = readValue<string>("\nEnter the room name to be disabled: ", [](const string& s)
 	{
 		return s != "";
@@ -190,7 +240,7 @@ void HSystem::disableRoom()
 
 	if (disabledRoom->id == 0)
 	{
-		cout << "\nINFORMATION: caldeira status can't be changed!\n";
+		cout << "\nERROR: boiler status can't be changed!\n";
 		system("pause");
 		return;
 	}
@@ -202,10 +252,19 @@ void HSystem::disableRoom()
 	system("pause");
 }
 
+char* HSystem::formatRoom(const Room &r) const
+{
+	const size_t stringLength = r.getName().length() + 1;
+	char* buffer = new char[stringLength + 10];
+
+	sprintf(buffer, "%s (%.1fC)", r.getName().c_str(), r.getTemperature());
+
+	return buffer;
+}
+
 void HSystem::enableRoom()
 {
-	// não pode ativar nem desativar a caldeira
-	string roomName = readValue<string>("\nEnter the room name to be enabled: ", [](const string& s)
+	string roomName = readValue<string>("\nEnter the room to be enabled: ", [](const string& s)
 	{
 		return s != "";
 	});
@@ -219,7 +278,7 @@ void HSystem::enableRoom()
 
 	if (enabledRoom->id == 0)
 	{
-		cout << "\nINFORMATION: caldeira status can't be changed!\n";
+		cout << "\ERROR: boiler status can't be changed!\n";
 		system("pause");
 		return;
 	}
@@ -231,7 +290,40 @@ void HSystem::enableRoom()
 	system("pause");
 }
 
-void HSystem::removeEdge()
+void HSystem::changeTemperature()
+{
+	string roomName = readValue<string>("\nEnter the room name: ", [](const string& s)
+	{
+		return s != "";
+	});
+
+	Vertex<Room>* roomPointer = getRoom(roomName);
+
+	if (roomPointer == nullptr)
+	{
+		throw SourceRoomNotFound(roomName);
+	}
+
+	if (roomPointer->id == 0)
+	{
+		cout << "\nERROR: boiler status can't be changed!\n";
+		system("pause");
+		return;
+	}
+
+	double roomTemperature = readValue<double>("Enter the new room temperature:", [](double t)
+	{
+		return (t >= 0.0 && t <= 100.0);
+	});
+
+	roomPointer->info.setTemperature(roomTemperature);
+	changeTemperatureGraphViewer(roomPointer);
+
+	cout << "\nINFORMATION: room temperature successfully changed!\n";
+	system("pause");
+}
+
+void HSystem::removeConnection()
 {
 	string srcName = readValue<string>("\nEnter the source room name: ");
 	Vertex<Room>* srcRoom = getRoom(srcName);
@@ -251,7 +343,8 @@ void HSystem::removeEdge()
 
 	if (g.removeEdge(srcRoom->info, dstRoom->info))
 	{
-		cout << "\nINFORMATION: room added successfully!\n";
+		removeConnectionGraphViewer(make_pair(srcRoom->id, dstRoom->id));
+		cout << "\nINFORMATION: room removed successfully!\n";
 		system("pause");
 	}
 	else
@@ -259,6 +352,7 @@ void HSystem::removeEdge()
 		throw RoomExists();
 	}
 }
+
 
 bool HSystem::roomExists(const string &s) const
 {
@@ -274,7 +368,7 @@ Vertex<Room>* HSystem::getRoom(const string &s) const
 
 void HSystem::addConnection()
 {
-	string srcName = readValue<string>("\nEnter the source room name: ");
+	string srcName = readValue<string>("\nEnter source room: ");
 	Vertex<Room>* srcRoom = getRoom(srcName);
 
 	if (srcRoom == nullptr)
@@ -282,7 +376,7 @@ void HSystem::addConnection()
 		throw SourceRoomNotFound(srcName);
 	}
 
-	string dstName = readValue<string>("Enter the destinationr room name:");
+	string dstName = readValue<string>("Enter destination room:");
 	Vertex<Room>* dstRoom = getRoom(dstName);
 
 	if (dstRoom == nullptr)
@@ -290,19 +384,90 @@ void HSystem::addConnection()
 		throw DestinationRoomNotFound(dstName);
 	}
 
-	if (g.addEdge(srcRoom->info, dstRoom->info, 70.0))
+	if (g.addEdge(srcRoom->info, dstRoom->info, defaultWeight))
 	{
-		int currentID = nextID;
-		gv->addEdge(currentID, srcRoom->id, dstRoom->id, EdgeType::DIRECTED);
-		gv->setEdgeThickness(currentID, 7);
-		gv->setEdgeLabel(currentID, "70.0");
-		gv->rearrange();
-		nextID++;
-		cout << "\nINFORMATION: room added successfully!\n";
-		system("pause");
+		if (!g.isDAG())
+		{
+			g.removeEdge(srcRoom->info, dstRoom->info);
+			cout << "\nERROR: connections between rooms must not create cycles!\n";
+			system("pause");
+		}
+		else 
+		{
+			addConnectionGraphViewer(make_pair(srcRoom->id, dstRoom->id));
+			cout << "\nINFORMATION: room added successfully!\n";
+			system("pause");
+		}
 	}
 	else
 	{
 		throw RoomExists();
+	}
+}
+
+void HSystem::addConnectionGraphViewer(pair<unsigned, unsigned> edge)
+{
+	int currentID = nextID;
+
+	if (edge.first < rooms.size() && edge.second < rooms.size())
+	{
+		connections[currentID] = edge;
+		gv->addEdge(currentID, edge.first, edge.second, EdgeType::DIRECTED);
+		gv->setEdgeLabel(currentID, "70.0");
+		gv->rearrange();
+		nextID++;
+	}
+}
+
+void HSystem::addRoomGraphViewer(unsigned vertexId, const Room& room)
+{
+	rooms[vertexId] = room;
+	gv->addNode(vertexId);
+	gv->setVertexLabel(vertexId, formatRoom(room));
+	setVertexColor(vertexId, room.getTemperature());
+	gv->rearrange();
+}
+
+void HSystem::changeTemperatureGraphViewer(Vertex<Room>* &room)
+{
+	rooms.at(room->id).setTemperature(room->info.getTemperature());
+	gv->setVertexLabel(room->id, formatRoom(room->info));
+	setVertexColor(room->id, room->info.getTemperature());
+	gv->rearrange();
+}
+
+void HSystem::removeRoomGraphViewer(Vertex<Room>* &room)
+{
+	if (room->id < rooms.size())
+	{
+		rooms.erase(room->id);
+		gv->removeNode(room->id);
+		gv->rearrange();
+
+	/*	for (auto &e : connections)
+		{
+			if (e.second.first == room->id)
+			{
+				connections.erase(e.first);
+			}
+		}
+		*/
+	}
+}
+
+void HSystem::removeConnectionGraphViewer(pair<unsigned, unsigned> edge)
+{
+	if (edge.first < rooms.size() && edge.second < rooms.size())
+	{
+		for (auto &e : connections)
+		{
+			if (e.second == edge)
+			{
+				gv->removeEdge(e.first);
+				gv->rearrange();
+				connections.erase(e.first);
+				break;
+			}
+		}
 	}
 }
