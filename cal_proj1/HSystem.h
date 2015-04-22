@@ -16,6 +16,7 @@
 #include "Common.h"
 #include "edgetype.h"
 #include "Graph.h"
+#include "Pipe.h"
 #include "graphviewer.h"
 #include "Room.h"
 #include "UI.h"
@@ -41,7 +42,7 @@ public:
 	void displayConnections() const;
 	void enableRoom();
 	void addConnection();
-	void addConnectionGraphViewer(pair<unsigned, unsigned> edge);
+	void addConnectionGraphViewer(unsigned src, unsigned dst);
 	void addRoom();
 	void addRoomGraphViewer(unsigned vertexId, const Room& room);
 	void removeRoom();
@@ -49,14 +50,14 @@ public:
 	void changeTemperature();
 	void changeTemperatureGraphViewer(Vertex<Room>* &room);
 	void removeConnection();
-	void removeConnectionGraphViewer(pair<unsigned, unsigned> edge);
+	void removeConnectionGraphViewer(unsigned src, unsigned dst);
 	void resetFlow();
 	void addBoiler();
 
 private:
 
 	map<unsigned, Room> rooms;
-	map<unsigned, pair<unsigned, unsigned> > connections;
+	map<unsigned, Pipe> pipes;
 
 	const double defaultWeight = 70.0;
 

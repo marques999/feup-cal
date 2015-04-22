@@ -12,7 +12,21 @@
 
 #include "HSystem.h"
 
-using namespace std;
+static const string promptRoomDisable = "Enter the room name to be disabled: ";
+static const string promptRoomEnable = "Enter the room name to be enabled: ";
+static const string radiatorIsBoiler = "ERROR: boiler status can't be changed by the user.";
+static const string radiatorDisableFail = "ERROR: radiator already disabled, nothing to do...";
+static const string radiatorDisableSuccess = "INFORMATION: room radiator disabled successfully!";
+static const string radiatorEnableFail = "ERROR: radiator already enabled, nothing to do...";
+static const string radiatorEnableSuccess = "INFORMATION: room radiator enabled successfully!";
+static const string roomConnectSuccess = "INFORMATION: rooms were connected successfully!";
+static const string roomConnectFail = "ERROR: rooms are already connected, please choose another pair.";
+static const string roomDisconnectSuccess = "INFORMATION: rooms were disconnected successfully!";
+static const string roomDisconnectFail = "ERROR: rooms are not connected to each other.";
+static const string roomConnectBoiler = "ERROR: destination room is the boiler, please choose another one.";
+static const string connectionHasCycles = "ERROR: connections between rooms must not create cycles.";
+static const string unknownError = "ERROR: what have you done???";
+static const string resetWeightSuccess = "INFORMATION: weights reset successfully!";
 
 HSystem::HSystem()
 {
@@ -48,7 +62,7 @@ void HSystem::reset()
 {
 	gv->closeWindow();
 	rooms.clear();
-	connections.clear();
+	pipes.clear();
 	g = Graph<Room>();
 	initialize();
 }
@@ -72,30 +86,30 @@ void HSystem::displayConnections() const
 
 	vector<string> tableLabel = { " ID", " From", " To", " Quantity" };
 
-	UI::DisplayFrame("CONNECTIONS");
+	UI::DisplayFrame("PIPES");
 	UI::DisplayTable(rowCount, tableLabel, tableLength);
 
-	for (auto &c : connections)
+	for (auto &c : pipes)
 	{
 		vector<string> tableRow(rowCount);
 
 		tableRow[0] = UI::Format(c.first, 8);
-		tableRow[1] = roomName(c.second.first);
-		tableRow[2] = roomName(c.second.second);
-		tableRow[3] = "0";
+		tableRow[1] = roomName(c.second.source());
+		tableRow[2] = roomName(c.second.dest());
+		tableRow[3] = UI::Format(c.second.weight(), 8);
 
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
 	}
 
-	UI::DisplayMessage("Press any key to continue...");
+	UI::PauseConsole();
 }
 
 void HSystem::displayRooms() const
 {
-	const int rowCount = 4;
-	const int tableLength[rowCount] = { 8, 32, 12, 12 };
+	const int rowCount = 6;
+	const int tableLength[rowCount] = { 8, 24, 5, 5, 16, 12 };
 
-	vector<string> tableLabel = { " Room", " Name", " Temperature", " Status" };
+	vector<string> tableLabel = { " Room", " Name", "  X", "  Y", " Temperature", " Status" };
 
 	UI::DisplayFrame("ROOMS");
 	UI::DisplayTable(rowCount, tableLabel, tableLength);
@@ -106,13 +120,15 @@ void HSystem::displayRooms() const
 
 		tableRow[0] = UI::Format(r.first, 8);
 		tableRow[1] = r.second.getName();
-		tableRow[2] = UI::Format(r.second.getTemperature(), 8);
-		tableRow[3] = r.second.isEnabled() ? "Enabled" : "Disabled";
+		tableRow[2] = UI::Format(r.second.getX(), 4);
+		tableRow[3] = UI::Format(r.second.getY(), 4);
+		tableRow[4] = UI::Format(r.second.getTemperature(), 14);
+		tableRow[5] = r.second.isEnabled() ? "Enabled" : "Disabled";
 
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
 	}
 
-	UI::DisplayMessage("Press any key to continue...");
+	UI::PauseConsole();
 }
 
 string HSystem::roomName(unsigned id) const
@@ -212,14 +228,14 @@ void HSystem::saveGraph(const string &filename) const
 		v->info.write(out);
 	}
 
-	size_t numberEdges = connections.size();
+	size_t numberEdges = pipes.size();
 
 	out.write((char*)&numberEdges, sizeof(size_t));
 
-	for (auto &e : connections)
+	for (auto &e : pipes)
 	{
-		map<unsigned, Room>::const_iterator srcRoom = rooms.find(e.second.first);
-		map<unsigned, Room>::const_iterator dstRoom = rooms.find(e.second.second);
+		map<unsigned, Room>::const_iterator srcRoom = rooms.find(e.second.source());
+		map<unsigned, Room>::const_iterator dstRoom = rooms.find(e.second.dest());
 
 		if (srcRoom == rooms.end() || dstRoom == rooms.end())
 		{
@@ -227,8 +243,7 @@ void HSystem::saveGraph(const string &filename) const
 		}
 
 		out.write((char*)&(e.first), sizeof(unsigned));
-		out.write((char*)&(e.second.first), sizeof(unsigned));
-		out.write((char*)&(e.second.second), sizeof(unsigned));
+		e.second.write(out);
 	}
 
 	out.close();
@@ -249,7 +264,7 @@ void HSystem::addBoiler()
 void HSystem::resetFlow()
 {
 	g.resetWeights(defaultWeight);
-	UI::DisplayMessage("INFORMATION: weights reset successfully!");
+	UI::DisplayMessage(resetWeightSuccess);
 	saveGraph("this.graph");
 }
 
@@ -343,17 +358,28 @@ T readValue(const string& prompt)
 	return readValue<T>(prompt, [](T) { return true; });
 }
 
+static const string addRoomSuccess = "INFORMATION: room added successfully!";
+static const string addRoomFail = "ERROR: house is currently full, please remove a room first.";
+static const string removeRoomSuccess = "INFORMATION: room removed successfully!";
+static const string roomExists = "ERROR: a room with the same name already exists.";
+static const string promptRoomName = "Enter room name: ";
+static const string promptDestinationName = "Enter destination room name: ";
+static const string promptSourceName = "Enter source room name: ";
+static const string promptTemperature = "Enter the room temperature: ";
+static const string promptNewTemperature = "Enter the new room temperature: ";
+static const string temperatureSuccess = "INFORMATION: room temperature successfully changed!";
+
 void HSystem::addRoom()
 {
-	string roomName = readValue<string>("\nEnter source room name: ");
+	string roomName = readValue<string>(promptSourceName);
 
 	if (getRoom(roomName) != nullptr)
 	{
-		UI::DisplayMessage("ERROR: a room with the same name already exists.");
+		UI::DisplayMessage(roomExists);
 	}
 	else
 	{
-		double roomTemperature = readValue<double>("Enter the room temperature:", [](double t)
+		double roomTemperature = readValue<double>(promptTemperature, [](double t)
 		{
 			return (t >= 0.0 && t <= 42.0);
 		});
@@ -369,12 +395,12 @@ void HSystem::addRoom()
 			if (vertexId != -1)
 			{
 				addRoomGraphViewer(vertexId, newRoom);
-				UI::DisplayMessage("INFORMATION: room added successfully!");
+				UI::DisplayMessage(addRoomSuccess);
 			}
 		}
 		else
 		{
-			UI::DisplayMessage("ERROR: house is currently full, please remove a room first.");
+			UI::DisplayMessage(addRoomFail);
 		}
 	}
 }
@@ -389,7 +415,7 @@ void HSystem::removePosition(int x, int y)
 
 void HSystem::removeRoom()
 {
-	string roomName = readValue<string>("\nEnter source room name: ");
+	string roomName = readValue<string>(promptRoomName);
 
 	if (getRoom(roomName) == nullptr)
 	{
@@ -414,32 +440,66 @@ void HSystem::removeRoom()
 
 	gv->removeNode(vertexId);
 	gv->rearrange();
-	UI::DisplayMessage("INFORMATION: room removed successfully!");
+	UI::DisplayMessage(removeRoomSuccess);
 }
 
 void HSystem::disableRoom()
 {
-	string roomName = readValue<string>("\nEnter the room name to be disabled: ", [](const string& s)
-	{
-		return s != "";
-	});
+	string roomName = readValue<string>(promptRoomDisable);
+	Vertex<Room>* selectedRoom = getRoom(roomName);
 
-	Vertex<Room>* disabledRoom = getRoom(roomName);
-
-	if (disabledRoom == nullptr)
+	if (selectedRoom == nullptr)
 	{
 		throw SourceRoomNotFound(roomName);
 	}
 
-	if (disabledRoom->id == 0)
+	if (selectedRoom->id == 0)
 	{
-		UI::DisplayMessage("ERROR: boiler status can't be changed.");
+		UI::DisplayMessage(radiatorIsBoiler);
 	}
 	else
 	{
-		gv->setVertexColor(disabledRoom->id, "DARK_GRAY");
-		gv->rearrange();
-		UI::DisplayMessage("INFORMATION: room radiator disabled successfully!");
+		if (selectedRoom->info.isEnabled())
+		{
+			gv->setVertexColor(selectedRoom->id, "DARK_GRAY");
+			gv->rearrange();
+			selectedRoom->info.disable();
+			UI::DisplayMessage(radiatorDisableSuccess);
+		}
+		else
+		{
+			UI::DisplayMessage(radiatorDisableFail);
+		}
+	}
+}
+
+void HSystem::enableRoom()
+{
+	string roomName = readValue<string>(promptRoomEnable);
+	Vertex<Room>* selectedRoom = getRoom(roomName);
+
+	if (selectedRoom == nullptr)
+	{
+		throw SourceRoomNotFound(roomName);
+	}
+
+	if (selectedRoom->id == 0)
+	{
+		UI::DisplayMessage(radiatorIsBoiler);
+	}
+	else
+	{
+		if (selectedRoom->info.isEnabled())
+		{
+			UI::DisplayMessage(radiatorEnableFail);
+		}
+		else
+		{
+			setVertexColor(selectedRoom->id, selectedRoom->info.getTemperature());
+			selectedRoom->info.enable();
+			gv->rearrange();
+			UI::DisplayMessage(radiatorEnableSuccess);
+		}
 	}
 }
 
@@ -453,39 +513,9 @@ char* HSystem::formatRoom(const Room &r) const
 	return buffer;
 }
 
-void HSystem::enableRoom()
-{
-	string roomName = readValue<string>("\nEnter the room to be enabled: ", [](const string& s)
-	{
-		return s != "";
-	});
-
-	Vertex<Room>* selectedRoom = getRoom(roomName);
-
-	if (selectedRoom == nullptr)
-	{
-		throw SourceRoomNotFound(roomName);
-	}
-
-	if (selectedRoom->id == 0)
-	{
-		UI::DisplayMessage("ERROR: boiler status can't be changed.");
-	}
-	else
-	{
-		setVertexColor(selectedRoom->id, selectedRoom->info.getTemperature());
-		gv->rearrange();
-		UI::DisplayMessage("INFORMATION: room radiator enabled successfully!");
-	}
-}
-
 void HSystem::changeTemperature()
 {
-	string roomName = readValue<string>("\nEnter target room name: ", [](const string& s)
-	{
-		return s != "";
-	});
-
+	string roomName = readValue<string>(promptRoomName);
 	Vertex<Room>* selectedRoom = getRoom(roomName);
 
 	if (selectedRoom == nullptr)
@@ -495,18 +525,100 @@ void HSystem::changeTemperature()
 
 	if (selectedRoom->id == 0)
 	{
-		UI::DisplayMessage("ERROR: boiler status can't be changed.");
+		UI::DisplayMessage(radiatorIsBoiler);
 	}
 	else
 	{
-		double roomTemperature = readValue<double>("Enter the new room temperature:", [](double t)
+		double roomTemperature = readValue<double>(promptNewTemperature, [](double t)
 		{
 			return (t >= 0.0 && t <= 100.0);
 		});
 
 		selectedRoom->info.setTemperature(roomTemperature);
 		changeTemperatureGraphViewer(selectedRoom);
-		UI::DisplayMessage("INFORMATION: room temperature successfully changed!");
+		UI::DisplayMessage(temperatureSuccess);
+	}
+}
+
+void HSystem::addConnection()
+{
+	string srcName = readValue<string>(promptSourceName);
+	Vertex<Room>* srcRoom = getRoom(srcName);
+
+	if (srcRoom == nullptr)
+	{
+		throw SourceRoomNotFound(srcName);
+	}
+
+	string dstName = readValue<string>(promptDestinationName);
+	Vertex<Room>* dstRoom = getRoom(dstName);
+
+	if (dstRoom == nullptr)
+	{
+		throw DestinationRoomNotFound(dstName);
+	}
+
+	for (auto &e : pipes)
+	{
+		if (e.second.source() == srcRoom->id && e.second.dest() == dstRoom->id)
+		{
+			UI::DisplayMessage(roomConnectFail);
+			return;
+		}
+	}
+
+	if (dstRoom->id == 0)
+	{
+		UI::DisplayMessage(roomConnectBoiler);
+	}
+	else
+	{
+		if (g.addEdge(srcRoom->info, dstRoom->info, defaultWeight))
+		{
+			if (!g.isDAG())
+			{
+				g.removeEdge(srcRoom->info, dstRoom->info);
+				UI::DisplayMessage(connectionHasCycles);
+			}
+			else
+			{
+				addConnectionGraphViewer(srcRoom->id, dstRoom->id);
+				UI::DisplayMessage(roomConnectSuccess);
+			}
+		}
+		else
+		{
+			UI::DisplayMessage(unknownError);
+		}
+	}
+}
+
+void HSystem::removeConnection()
+{
+	string srcName = readValue<string>(promptSourceName);
+	Vertex<Room>* srcRoom = getRoom(srcName);
+
+	if (srcRoom == nullptr)
+	{
+		throw SourceRoomNotFound(srcName);
+	}
+
+	string dstName = readValue<string>(promptDestinationName);
+	Vertex<Room>* dstRoom = getRoom(dstName);
+
+	if (dstRoom == nullptr)
+	{
+		throw DestinationRoomNotFound(dstName);
+	}
+
+	if (g.removeEdge(srcRoom->info, dstRoom->info))
+	{
+		removeConnectionGraphViewer(srcRoom->id, dstRoom->id);
+		UI::DisplayMessage(roomDisconnectSuccess);
+	}
+	else
+	{
+		UI::DisplayMessage(roomDisconnectFail);
 	}
 }
 
@@ -604,96 +716,14 @@ Vertex<Room>* HSystem::getRoom(const string &s) const
 	return g.getVertex(Room(s));
 }
 
-void HSystem::addConnection()
-{
-	string srcName = readValue<string>("\nEnter source room name: ");
-	Vertex<Room>* srcRoom = getRoom(srcName);
-
-	if (srcRoom == nullptr)
-	{
-		throw SourceRoomNotFound(srcName);
-	}
-
-	string dstName = readValue<string>("Enter destination room name: ");
-	Vertex<Room>* dstRoom = getRoom(dstName);
-
-	if (dstRoom == nullptr)
-	{
-		throw DestinationRoomNotFound(dstName);
-	}
-
-	for (auto &e : connections)
-	{
-		if (e.second.first == srcRoom->id && e.second.second == dstRoom->id)
-		{
-			UI::DisplayMessage("ERROR: rooms are already connected, please choose another pair.");
-			return;
-		}
-	}
-
-	if (dstRoom->id == 0)
-	{
-		UI::DisplayMessage("ERROR: destination room is the boiler, please choose another one.");
-	}
-	else
-	{
-		if (g.addEdge(srcRoom->info, dstRoom->info, defaultWeight))
-		{
-			if (!g.isDAG())
-			{
-				g.removeEdge(srcRoom->info, dstRoom->info);
-				UI::DisplayMessage("ERROR: connections between rooms must not create cycles.");
-			}
-			else
-			{
-				addConnectionGraphViewer(make_pair(srcRoom->id, dstRoom->id));
-				UI::DisplayMessage("INFORMATION: rooms were connected successfully!");
-			}
-		}
-		else
-		{
-			UI::DisplayMessage("ERROR: what have you done???");
-		}
-	}
-}
-
-void HSystem::removeConnection()
-{
-	string srcName = readValue<string>("\nEnter source room name: ");
-	Vertex<Room>* srcRoom = getRoom(srcName);
-
-	if (srcRoom == nullptr)
-	{
-		throw SourceRoomNotFound(srcName);
-	}
-
-	string dstName = readValue<string>("Enter destination room name: ");
-	Vertex<Room>* dstRoom = getRoom(dstName);
-
-	if (dstRoom == nullptr)
-	{
-		throw DestinationRoomNotFound(dstName);
-	}
-
-	if (g.removeEdge(srcRoom->info, dstRoom->info))
-	{
-		removeConnectionGraphViewer(make_pair(srcRoom->id, dstRoom->id));
-		UI::DisplayMessage("INFORMATION: rooms disconnected successfully!");
-	}
-	else
-	{
-		UI::DisplayMessage("ERROR: rooms are not connected to each other.");
-	}
-}
-
-void HSystem::addConnectionGraphViewer(pair<unsigned, unsigned> edge)
+void HSystem::addConnectionGraphViewer(unsigned src, unsigned dst)
 {
 	int currentID = nextID;
 
-	if (edge.first < rooms.size() && edge.second < rooms.size())
+	if (src < rooms.size() && dst < rooms.size())
 	{
-		connections[currentID] = edge;
-		gv->addEdge(currentID, edge.first, edge.second, EdgeType::DIRECTED);
+		pipes[currentID] = Pipe(src, dst, 70.0);
+		gv->addEdge(currentID, src, dst, EdgeType::DIRECTED);
 		gv->setEdgeLabel(currentID, "70.0");
 		gv->rearrange();
 		nextID++;
@@ -736,17 +766,17 @@ void HSystem::removeRoomGraphViewer(Vertex<Room>* &room)
 	}
 }
 
-void HSystem::removeConnectionGraphViewer(pair<unsigned, unsigned> edge)
+void HSystem::removeConnectionGraphViewer(unsigned src, unsigned dst)
 {
-	if (edge.first < rooms.size() && edge.second < rooms.size())
+	if (src < rooms.size() && dst < rooms.size())
 	{
-		for (auto &e : connections)
+		for (auto &e : pipes)
 		{
-			if (e.second == edge)
+			if (e.second.source() == src && e.second.dest() == dst)
 			{
 				gv->removeEdge(e.first);
 				gv->rearrange();
-				connections.erase(e.first);
+				pipes.erase(e.first);
 				break;
 			}
 		}

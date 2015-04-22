@@ -71,7 +71,19 @@ namespace UI
 
 	void DisplayMessage(const string &msg)
 	{
-		cout << "\n" << msg << "\n" << "Press any key continue...";
+		cout << "\n" << msg << "\n" << "Press any key to continue...";
+		cin.get();
+		cin.clear();
+
+		if (cin.rdbuf()->in_avail() != 0)
+		{
+			cin.ignore(numeric_limits<streamsize>::max(), '\n');
+		}
+	}
+
+	void PauseConsole()
+	{
+		cout << "Press any key to continue...";
 		cin.get();
 		cin.clear();
 

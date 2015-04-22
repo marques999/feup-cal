@@ -92,6 +92,7 @@
     <ClInclude Include="graphviewer.h" />
     <ClInclude Include="HSystem.h" />
     <ClInclude Include="Menu.h" />
+    <ClInclude Include="Pipe.h" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="Vertex.h" />

@@ -1,34 +1,74 @@
-#include <string>
+/*!
+ * \file Pipe.h
+ *
+ * FEUP_CAL1415_2MIEIC02_D
+ * \author Diogo Marques
+ * \author Jose Taveira
+ * \author Vitor Esteves
+ *
+ * \date Abril 2015
+ *
+ */
 
-#include "Room.h"
+#ifndef __PIPE_H_
+#define __PIPE_H_
 
-using namespace std;
+#include "Common.h"
 
 class Pipe
 {
 public:
 
-	Pipe(pair<Room*, Room*> &r) : connection(r), caudal(70)
+	Pipe() : _src(0), _dst(0), _weight(0.0)
 	{
 	}
 
-	Room& getSource() 
+	Pipe(unsigned src, unsigned dst) : _src(src), _dst(dst)
 	{
-		return *(connection.first); 
 	}
 
-	Room& getDestination() 
+	Pipe(unsigned src, unsigned dst, double weight) : _src(src), _dst(dst), _weight(weight)
 	{
-		return *(connection.second); 
 	}
 
-	unsigned getCaudal() 
+	~Pipe()
 	{
-		return caudal; 
+	}
+
+	unsigned source() const
+	{
+		return _src;
+	}
+
+	unsigned dest() const
+	{
+		return _dst;
+	}
+
+	double weight() const
+	{
+		return _weight;
+	}
+
+	void read(ifstream &fin)
+	{
+		fin.read((char*)&_src, sizeof(unsigned));
+		fin.read((char*)&_dst, sizeof(unsigned));
+		fin.read((char*)&_weight, sizeof(double));
+	}
+
+	void write(ofstream &fout) const
+	{
+		fout.write((char*)&_src, sizeof(unsigned));
+		fout.write((char*)&_dst, sizeof(unsigned));
+		fout.write((char*)&_weight, sizeof(double));
 	}
 
 private:
 
-	pair<Room*, Room*> connection;
-	unsigned caudal;
+	unsigned _src;
+	unsigned _dst;
+	double _weight;
 };
+
+#endif /* __PIPE_H_ */

@@ -15,13 +15,11 @@
 
 #include "Common.h"
 
-using namespace std;
-
 class Room
 {
 public:
 
-	Room() : name(""), temperature(20.0), enabled(true)
+	Room() : _name(""), _temperature(20.0), _enabled(true), _x(0), _y(0)
 	{
 	}
 
@@ -30,86 +28,94 @@ public:
 		read(fin);
 	}
 
-	Room(const string &s) : name(s), temperature(20.0), enabled(true)
+	Room(const string &s) : _name(s), _temperature(20.0), _enabled(true), _x(0), _y(0)
 	{
 	}
 
-	Room(const string &s, const double t) : name(s), temperature(t), enabled(true)
+	Room(const string &s, const double t) : _name(s), _temperature(t), _enabled(true), _x(0), _y(0)
 	{
+	}
 
+	~Room()
+	{
 	}
 
 	string getName() const
 	{
-		return name;
+		return _name;
 	}
 
 	int getX() const
 	{
-		return positionX;
+		return _x;
 	}
 
 	int getY() const
 	{
-		return positionY;
+		return _y;
 	}
 
 	void setPosition(int x, int y)
 	{
-		positionX = x;
-		positionY = y;
+		_x = x;
+		_y = y;
 	}
 
 	bool isEnabled() const
 	{
-		return enabled;
+		return _enabled;
 	}
 
-	void toggleStatus()
+	void enable()
 	{
-		enabled = !enabled;
+		_enabled = true;
+	}
+
+	void disable()
+	{
+		_enabled = false;
 	}
 
 	double getTemperature() const
 	{
-		return temperature;
+		return _temperature;
 	}
 
 	void setTemperature(double newTemperature)
 	{
-		temperature = newTemperature;
+		_temperature = newTemperature;
 	}
 
 	bool operator==(const Room &rhs) const
 	{
-		return name == rhs.name;
+		return _name == rhs._name;
 	}
 
 	void read(ifstream &fin)
 	{
-		getline(fin, name);
-		fin.read((char*)&temperature, sizeof(double));
-		fin.read((char*)&positionX, sizeof(int));
-		fin.read((char*)&positionY, sizeof(int));
-		fin.read((char*)&enabled, sizeof(unsigned char));
+		getline(fin, _name);
+		fin.read((char*)&_temperature, sizeof(double));
+		fin.read((char*)&_x, sizeof(int));
+		fin.read((char*)&_y, sizeof(int));
+		fin.read((char*)&_enabled, sizeof(unsigned char));
 	}
 
 	void write(ofstream &fout) const
 	{
-		fout << name << endl;
-		fout.write((char*)&temperature, sizeof(double));
-		fout.write((char*)&positionX, sizeof(int));
-		fout.write((char*)&positionY, sizeof(int));
-		fout.write((char*)&enabled, sizeof(unsigned char));
+		fout << _name << endl;
+		fout.write((char*)&_temperature, sizeof(double));
+		fout.write((char*)&_x, sizeof(int));
+		fout.write((char*)&_y, sizeof(int));
+		fout.write((char*)&_enabled, sizeof(unsigned char));
 	}
 
 private:
 
-	string name;
-	bool enabled;
-	int positionX;
-	int positionY;
-	double temperature;
+	string _name;
+	bool _enabled;
+	int _x;
+	int _y;
+	double _temperature;
 };
 
 #endif /* __ROOM_H_ */

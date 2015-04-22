@@ -22,6 +22,8 @@ namespace UI
 	 */
 	void ClearConsole();
 
+	void PauseConsole();
+
 	/**
 	* @brief displays a frame (or header)
 	* @param s string to be displayed

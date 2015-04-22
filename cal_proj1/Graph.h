@@ -1,3 +1,15 @@
+/*!
+* \file Graph.h
+*
+* FEUP_CAL1415_2MIEIC02_D
+* \author Diogo Marques
+* \author Jose Taveira
+* \author Vitor Esteves
+*
+* \date Abril 2015
+*
+*/
+
 #ifndef GRAPH_H_
 #define GRAPH_H_
 
@@ -579,4 +591,4 @@ vector<T> Graph<T>::getPath(const T &src, const T &dst)
 	return res;
 }
 
-#endif
+#endif /* __GRAPH_H_ */
