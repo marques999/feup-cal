@@ -1,6 +1,17 @@
+/*!
+ * \file Menu.cpp
+ *
+ * FEUP_CAL1415_2MIEIC02_D
+ * \author Diogo Marques
+ * \author Jose Taveira
+ * \author Vitor Esteves
+ *
+ * \date Abril 2015
+ *
+ */
+
 #include "HSystem.h"
 #include "Menu.h"
-#include "Exceptions.h"
 
 HSystem* hSystem = nullptr;
 
@@ -68,17 +79,59 @@ __forceinline void hSystem_resetFlow()
 	}
 }
 
-__forceinline void hSystem_displayInfo()
+__forceinline void hSystem_displayRooms()
 {
 	if (hSystem != nullptr)
 	{
-		hSystem->displayInfo();
+		hSystem->displayRooms();
 	}
+}
+
+__forceinline void hSystem_displayConnections()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->displayConnections();
+	}
+}
+
+__forceinline void hSystem_reset()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->reset();
+	}
+}
+
+__forceinline void hSystem_load()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->loadGraph("this.graph");
+	}
+}
+
+void adminMenu()
+{
+	Menu adminMenu("View House");
+
+	adminMenu.setWidth(40);
+	adminMenu.addItem('1', "xxxx");
+	adminMenu.addItem('2', "yyyy");
+	adminMenu.addSeparator();
+	adminMenu.addItem('3', "Display rooms");
+	adminMenu.addHandler('3', hSystem_displayRooms);
+	adminMenu.addItem('4', "Display connections");
+	adminMenu.addHandler('4', hSystem_displayConnections);
+	adminMenu.addSeparator();
+	adminMenu.addItem('5', "<- Back");
+	adminMenu.addHandler('5', nullptr);
+	adminMenu.run();
 }
 
 void settingsMenu()
 {
-	Menu settingsMenu("Settings");
+	Menu settingsMenu("Edit House");
 
 	settingsMenu.setWidth(40);
 	settingsMenu.addItem('1', "Create room");
@@ -99,26 +152,12 @@ void settingsMenu()
 	settingsMenu.addHandler('7', hSystem_enableRadiator);
 	settingsMenu.addItem('8', "Reset flow");
 	settingsMenu.addHandler('8', hSystem_resetFlow);
-	settingsMenu.addItem('9', "Display information");
-	settingsMenu.addHandler('9', hSystem_displayInfo);
 	settingsMenu.addSeparator();
-	settingsMenu.addItem('0', "<- Back");
-	settingsMenu.addHandler('0', nullptr);
+	settingsMenu.addItem('9', "<- Back");
+	settingsMenu.addHandler('9', nullptr);
 
-	try 
-	{
 		settingsMenu.run();
-	}
-	catch (SourceRoomNotFound &srnf)
-	{
-		cout << endl << srnf << endl;
-		system("pause");
-	}
-	catch (DestinationRoomNotFound &drnf)
-	{
-		cout << endl << drnf << endl;
-		system("pause");
-	}
+
 }
 
 void mainMenu()
@@ -127,19 +166,25 @@ void mainMenu()
 
 	mainMenu.setWidth(40);
 	mainMenu.addItem('1', "View House");
+	mainMenu.addHandler('1', adminMenu);
 	mainMenu.addItem('2', "Edit House");
 	mainMenu.addHandler('2', settingsMenu);
-	mainMenu.addItem('3', "Export graph");
-	mainMenu.addItem('4', "Reset");
 	mainMenu.addSeparator();
-	mainMenu.addItem('5', "Exit");
-	mainMenu.addHandler('5', nullptr);
+	mainMenu.addItem('3', "Load graph");
+	mainMenu.addHandler('3', hSystem_load);
+	mainMenu.addItem('4', "Save graph");
+	mainMenu.addHandler('4', nullptr);
+	mainMenu.addItem('5', "Reset");
+	mainMenu.addHandler('5', hSystem_reset);
+	mainMenu.addSeparator();
+	mainMenu.addItem('6', "Exit");
+	mainMenu.addHandler('6', nullptr);
 	mainMenu.run();
 }
 
 int main()
 {
-	hSystem =new  HSystem();
+	hSystem = new HSystem();
 	mainMenu();
 	return 0;
 }

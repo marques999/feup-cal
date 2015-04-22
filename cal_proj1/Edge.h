@@ -1,5 +1,17 @@
-#ifndef EDGE_H_
-#define EDGE_H_
+/*!
+ * \file Edge.h
+ *
+ * FEUP_CAL1415_2MIEIC02_D
+ * \author Diogo Marques
+ * \author Jose Taveira
+ * \author Vitor Esteves
+ *
+ * \date Abril 2015
+ *
+ */
+
+#ifndef __EDGE_H_
+#define __EDGE_H_
 
 template<class T>
 struct Vertex;
@@ -12,7 +24,8 @@ struct Edge
 	}
 
 	Vertex<T> *dest;
+
 	double weight;
 };
 
-#endif
+#endif /* __EDGE_H_ */

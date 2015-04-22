@@ -18,23 +18,6 @@ unsigned getTimeDiff(uint64_t curTime, uint64_t prevTime)
 	return unsigned(curTime - prevTime);
 }
 
-void clearConsole()
-{
-	system("cls");
-}
-
-void pauseConsole(const string& message)
-{
-	cout << message << endl;
-	cin.get();
-	cin.clear();
-
-	if (cin.rdbuf()->in_avail() != 0)
-	{
-		cin.ignore(numeric_limits<streamsize>::max(), '\n');
-	}
-}
-
 bool stringStartsWith(const string& str, const string& prefix)
 {
 	return !str.compare(0, prefix.size(), prefix);

@@ -1,18 +1,30 @@
-#ifndef VERTEX_H_
-#define VERTEX_H_
+/*!
+ * \file Vertex.h
+ *
+ * FEUP_CAL1415_2MIEIC02_D
+ * \author Diogo Marques
+ * \author Jose Taveira
+ * \author Vitor Esteves
+ *
+ * \date Abril 2015
+ *
+ */
 
-#include <vector>
+#ifndef __VERTEX_H_
+#define __VERTEX_H_
+
+#include "Common.h"
 #include "Edge.h"
 
 template <class T>
 struct Vertex
 {
-	Vertex(const T &in) : info(in), visited(false), processing(false), indegree(0), dist(0)
+	Vertex(const T &in) : info(in), visited(false), processing(false), indegree(0), dist(0), id(0)
 	{
 		path = 0;
 	}
 
-	Vertex(int id, const T &in) : info(in), visited(false), processing(false), indegree(0), dist(0), id(0)
+	Vertex(unsigned id, const T &in) : info(in), visited(false), processing(false), indegree(0), dist(0), id(id)
 	{
 		path = 0;
 	}
@@ -23,7 +35,7 @@ struct Vertex
 
 	bool visited;
 	bool processing;
-	int id;
+	unsigned id;
 	int indegree;
 	int dist;
 
@@ -60,4 +72,4 @@ void Vertex<T>::addEdge(Vertex<T> *dst, double w)
 	adj.push_back(Edge<T>(dst, w));
 }
 
-#endif
+#endif /* __VERTEX_H_ */

@@ -77,23 +77,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="connection.cpp" />
-    <ClCompile Include="FileSystem.cpp" />
-    <ClCompile Include="Graph.cpp" />
     <ClCompile Include="graphviewer.cpp" />
     <ClCompile Include="HSystem.cpp" />
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common.h" />
     <ClInclude Include="connection.h" />
     <ClInclude Include="Edge.h" />
     <ClInclude Include="edgetype.h" />
-    <ClInclude Include="Exceptions.h" />
     <ClInclude Include="Graph.h" />
     <ClInclude Include="graphviewer.h" />
     <ClInclude Include="HSystem.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="Room.h" />
+    <ClInclude Include="UI.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

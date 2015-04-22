@@ -1,28 +1,44 @@
-#pragma once
+/*!
+ * \file HSystem.h
+ *
+ * FEUP_CAL1415_2MIEIC02_D
+ * \author Diogo Marques
+ * \author Jose Taveira
+ * \author Vitor Esteves
+ *
+ * \date Abril 2015
+ *
+ */
 
-#include "Room.h"
+#ifndef __HSYSTEM_H_
+#define __HSYSTEM_H_
+
+#include "Common.h"
+#include "edgetype.h"
 #include "Graph.h"
 #include "graphviewer.h"
-#include <iostream>
-#include <map>
+#include "Room.h"
+#include "UI.h"
 
 class HSystem
 {
 public:
 
-	HSystem()
-	{
-		nextID = 0;
-		initialize();
-	}
-
-	~HSystem()
-	{
-	}
+	HSystem();
+	~HSystem();
 
 	void initialize();
+	void reset();
+	void loadGraph(const string &filename);
+	void saveGraph(const string &filename) const;
+	void readEdge(ifstream &fin);
+	void readVertex(ifstream &fin);
+	void writeEdge(ofstream &fout) const;
+	void writeVertex(unsigned vertexId, const Room &room, ofstream &fout) const;
+
 	void disableRoom();
-	void displayInfo();
+	void displayRooms() const;
+	void displayConnections() const;
 	void enableRoom();
 	void addConnection();
 	void addConnectionGraphViewer(pair<unsigned, unsigned> edge);
@@ -38,24 +54,34 @@ public:
 	void addBoiler();
 
 private:
-	
+
 	map<unsigned, Room> rooms;
 	map<unsigned, pair<unsigned, unsigned> > connections;
 
 	const double defaultWeight = 70.0;
 
 	char* formatRoom(const Room &r) const;
-	unsigned getPositionX(int i);
-	unsigned getPositionY(int j);
+
+	string roomName(unsigned id) const;
+
+	int roomPositionX;
+	int roomPositionY;
+	unsigned convertPositionX(int x);
+	unsigned convertPositionY(int y);
+	
+	void drawFloorplan(int x, int y);
+	bool positionRoom();
 	unsigned matrixWidth;
 	unsigned matrixHeight;
-	
-	unsigned matrixID;
+
 	vector<vector<bool> > matrix;
 	void setVertexColor(unsigned vertexId, double roomTemperature) const;
-	bool roomExists(const string &s) const;
+	void removePosition(int x, int y);
+	void updateMatrix();
 	unsigned nextID;
 	Vertex<Room>* getRoom(const string &s) const;
 	GraphViewer *gv;
 	Graph<Room> g;
 };
+
+#endif /* __HSYSTEM_H_ */

@@ -1,12 +1,12 @@
 #include "connection.h"
 
-void myerror(string msg) 
+void myerror(string msg)
 {
 	printf("%s\n", msg.c_str());
 	exit(-1);
 }
 
-Connection::Connection(short port) 
+Connection::Connection(short port)
 {
 #ifdef linux
 	struct sockaddr_in echoServAddr; /* Echo server address */
@@ -30,32 +30,37 @@ Connection::Connection(short port)
 		myerror("connect() failed");
 #else
 	WSADATA wsaData;
-	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (iResult != NO_ERROR)
-		printf("Client: Error at WSAStartup().\n");
 
-	// Create a socket.
+	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+	if (iResult != NO_ERROR)
+	{
+		printf("Client: Error at WSAStartup().\n");
+	}
+
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sock == INVALID_SOCKET) {
+
+	if (sock == INVALID_SOCKET)
+	{
 		printf("Client: socket() - Error at socket(): %ld\n", WSAGetLastError());
 		WSACleanup();
 	}
 
-	// Connect to a server.
 	sockaddr_in clientService;
+
 	clientService.sin_family = AF_INET;
-	// Just test using the localhost, you can try other IP address
 	clientService.sin_addr.s_addr = inet_addr("127.0.0.1");
 	clientService.sin_port = htons(port);
 
-	if (connect(sock, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+	if (connect(sock, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR)
+	{
 		printf("Client: connect() - Failed to connect.\n");
 		WSACleanup();
 	}
 #endif
 }
 
-bool Connection::sendMsg(string msg) 
+bool Connection::sendMsg(string msg)
 {
 	int res = send(sock, msg.c_str(), msg.size(), 0);
 
@@ -67,16 +72,23 @@ bool Connection::sendMsg(string msg)
 	return readLine() == "ok";
 }
 
-string Connection::readLine() 
+string Connection::readLine()
 {
 	string msg;
+
 	char ch;
-	while (true) 
+
+	while (true)
 	{
 		recv(sock, &ch, 1, 0);
+
 		if (ch == '\n')
+		{
 			break;
+		}
+
 		msg.push_back(ch);
 	}
+
 	return msg;
 }

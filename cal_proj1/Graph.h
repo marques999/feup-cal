@@ -33,6 +33,7 @@ protected:
 public:
 
 	int addVertex(const T &in);
+	bool addVertex(unsigned vertexId, const T &in);
 	bool addEdge(const T &sourc, const T &dest, double w);
 	int removeVertex(const T &in);
 	bool removeEdge(const T &sourc, const T &dest);
@@ -97,6 +98,25 @@ int Graph<T>::addVertex(const T &in)
 	vertices.push_back(newVertex);
 
 	return newVertex->id;
+}
+
+template <class T>
+bool Graph<T>::addVertex(unsigned vertexId, const T &in)
+{
+	for (Vertex<T>* &v : vertices)
+	{
+		if (v->info == in)
+		{
+			return false;
+		}
+	}
+
+	Vertex<T>* newVertex = new Vertex<T>(vertexId, in);
+
+	nextID = vertexId + 1;
+	vertices.push_back(newVertex);
+
+	return true;
 }
 
 template <class T>
@@ -300,21 +320,23 @@ int Graph<T>::maxNewChildren(Vertex<T> *v, T &inf) const
 
 		q.pop();
 		res.push_back(v1->info);
+
 		int l = level.front();
-		level.pop(); l++;
+
+		level.pop(); 
+		l++;
+
 		int nChildren = 0;
 
 		typename vector<Edge<T> >::iterator it = v1->adj.begin();
 		typename vector<Edge<T> >::iterator ite = v1->adj.end();
 
-		for (; it != ite; it++)
+		for (Vertex<T>* v : v1->adj)
 		{
-			Vertex<T> *d = it->dest;
-
-			if (d->visited == false)
+			if (v->dest->visited == false)
 			{
-				d->visited = true;
-				q.push(d);
+				v->dest->visited = true;
+				q.push(v->dest);
 				level.push(l);
 				nChildren++;
 			}
@@ -326,6 +348,7 @@ int Graph<T>::maxNewChildren(Vertex<T> *v, T &inf) const
 			inf = v1->info;
 		}
 	}
+
 	return maxChildren;
 }
 
