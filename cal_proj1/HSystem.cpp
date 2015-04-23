@@ -786,8 +786,8 @@ void HSystem::changeTemperatureGraphViewer(Vertex<Room>* &room)
 
 void HSystem::removeRoomGraphViewer(Vertex<Room>* &room)
 {
-	typename map<unsigned, Pipe>::iterator it = pipes.begin();
-	typename map<unsigned, Pipe>::iterator ite = pipes.end();
+	map<unsigned, Pipe>::iterator it = pipes.begin();
+	map<unsigned, Pipe>::iterator ite = pipes.end();
 
 	if (room->id < rooms.size())
 	{
@@ -797,7 +797,7 @@ void HSystem::removeRoomGraphViewer(Vertex<Room>* &room)
 
 		while (it != ite)
 		{
-			if (it->second.source == room->id || it->second.dest == room->id)
+			if (it->second.source() == room->id || it->second.dest() == room->id)
 			{
 				pipes.erase(it);
 			}
