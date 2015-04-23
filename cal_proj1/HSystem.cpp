@@ -73,14 +73,14 @@ void HSystem::displayConnections() const
 	UI::DisplayFrame("PIPES");
 	UI::DisplayTable(rowCount, tableLabel, tableLength);
 
-	for (auto &c : pipes)
+	for (auto &p : pipes)
 	{
 		vector<string> tableRow(rowCount);
 
-		tableRow[0] = UI::Format(c.first, 8);
-		tableRow[1] = roomName(c.second.source());
-		tableRow[2] = roomName(c.second.dest());
-		tableRow[3] = UI::FormatWeight(c.second.weight(), 1);
+		tableRow[0] = UI::Format(p.first, 8);
+		tableRow[1] = roomName(p.second.source());
+		tableRow[2] = roomName(p.second.dest());
+		tableRow[3] = UI::FormatWeight(p.second.weight(), 1);
 
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
 	}
@@ -137,7 +137,7 @@ void HSystem::readEdge(ifstream &fin)
 	}
 
 	g.addEdge(srcRoom->second, dstRoom->second, newPipe.weight());
-	addConnectionGraphViewer(newPipe.source(), newPipe.dest());
+	addConnectionGraphViewer(newPipe);
 }
 
 void HSystem::readVertex(ifstream &fin)
@@ -157,7 +157,7 @@ void HSystem::readVertex(ifstream &fin)
 
 void HSystem::writeEdge(unsigned edgeId, ofstream &fout) const
 {
-	if (edgeId >= pipes.size() || pipes.find(edgeId) != pipes.end())
+	if (pipes.find(edgeId) == pipes.end())
 	{
 		return;
 	}
@@ -177,7 +177,7 @@ void HSystem::writeEdge(unsigned edgeId, ofstream &fout) const
 
 void HSystem::writeVertex(unsigned vertexId, ofstream &fout) const
 {
-	if (vertexId < rooms.size() && rooms.find(vertexId) != rooms.end())
+	if (rooms.find(vertexId) != rooms.end())
 	{
 		if (vertexId != 0)
 		{
@@ -253,7 +253,7 @@ void HSystem::saveGraph(const string &filename) const
 		throw FileIOException(filename);
 	}
 
-	size_t numberVertices = g.getNumVertex();
+	size_t numberVertices = g.getNumVertex() - 1;
 
 	out.write((char*)&numberVertices, sizeof(size_t));
 
@@ -261,8 +261,11 @@ void HSystem::saveGraph(const string &filename) const
 
 	for (auto &v : vertices)
 	{
-		out.write((char*)&(v->id), sizeof(unsigned));
-		v->info.write(out);
+		if (v->id != 0)
+		{
+			out.write((char*)&(v->id), sizeof(unsigned));
+			v->info.write(out);
+		}
 	}
 
 	size_t numberEdges = pipes.size();
@@ -341,39 +344,39 @@ T readValue(const string& prompt, function<bool(T)> validator)
 	bool success = false;
 	T val = T();
 
-	while (!success)
+	cout << endl << prompt;
+
+	string input;
+	getline(std::cin, input);
+
+	if (cin.fail())
 	{
-		cout << prompt;
-
-		string input;
-		getline(std::cin, input);
-
-		if (cin.fail())
+		if (cin.eof())
 		{
-			if (cin.eof())
-			{
-				cin.clear();
-			}
-			else
-			{
-				cin.clear();
-				cout << "ERROR: invalid value, please try again...";
-				continue;
-			}
-		}
-
-		stringstream ss(input);
-
-		if (!(ss >> val) || ss.rdbuf()->in_avail() != 0)
-		{
-			cout << "ERROR: invalid value, please try again...";
+			cin.clear();
 		}
 		else
 		{
-			if (validator(val))
-			{
-				success = true;
-			}
+			cin.clear();
+			cout << "ERROR: invalid value entered.";
+		}
+	}
+
+	stringstream ss(input);
+
+	if (!(ss >> val) || ss.rdbuf()->in_avail() != 0)
+	{
+		cout << "ERROR: invalid value entered.";
+	}
+	else
+	{
+		if (validator(val))
+		{
+			success = true;
+		}
+		else
+		{
+			cout << "ERROR: invalid value entered.";
 		}
 	}
 
@@ -385,17 +388,6 @@ T readValue(const string& prompt)
 {
 	return readValue<T>(prompt, [](T) { return true; });
 }
-
-static const string addRoomSuccess = "INFORMATION: room added successfully!";
-static const string addRoomFail = "ERROR: house is currently full, please remove a room first.";
-static const string removeRoomSuccess = "INFORMATION: room removed successfully!";
-static const string roomExists = "ERROR: a room with the same name already exists.";
-static const string promptRoomName = "Enter room name: ";
-static const string promptDestinationName = "Enter destination room name: ";
-static const string promptSourceName = "Enter source room name: ";
-static const string promptTemperature = "Enter the room temperature: ";
-static const string promptNewTemperature = "Enter the new room temperature: ";
-static const string temperatureSuccess = "INFORMATION: room temperature successfully changed!";
 
 void HSystem::addRoom()
 {
@@ -456,19 +448,25 @@ void HSystem::removeRoom()
 
 	if (vertexId == -1)
 	{
-		return;
+		throw SourceRoomNotFound(roomName);
 	}
 
 	map<unsigned, Room>::const_iterator it = rooms.find(vertexId);
 
-	if (it != rooms.end())
+	if (vertexId == 0)
 	{
-		removePosition(it->second.getX(), it->second.getY());
+		UI::DisplayMessage(radiatorIsBoiler);
 	}
+	else
+	{
+		if (it != rooms.end())
+		{
+			removePosition(it->second.getX(), it->second.getY());
+		}
 
-	gv->removeNode(vertexId);
-	gv->rearrange();
-	UI::DisplayMessage(removeRoomSuccess);
+		removeRoomGraphViewer(vertexId);
+		UI::DisplayMessage(removeRoomSuccess);
+	}
 }
 
 void HSystem::disableRoom()
@@ -608,7 +606,7 @@ void HSystem::addConnection()
 			}
 			else
 			{
-				addConnectionGraphViewer(srcRoom->id, dstRoom->id);
+				addConnectionGraphViewer(Pipe(srcRoom->id, dstRoom->id, defaultWeight));
 				UI::DisplayMessage(roomConnectSuccess);
 			}
 		}
@@ -655,44 +653,52 @@ void HSystem::drawFloorplan(int x, int y)
 
 	for (int i = 0; i < matrixHeight; i++)
 	{
-		cout << "\t\t\t\t|";
+		cout << "   \t\t\t\xba";
 
 		for (int j = 0; j < matrixWidth; j++)
 		{
 			if (i == y && j == x)
 			{
-				cout << " X |";
+				cout << " X \xba";
 			}
 			else
 			{
-				cout << (matrix[i][j] ? " R |" : "   |");
+				cout << (matrix[i][j] ? " R \xba" : "   \xba");
 			}
 		}
 
-		cout << "\n\t\t\t\t";
+		cout << "\n   \t\t\t\xcd";
 
-		for (int k = 0; k < 4 * matrixWidth + 1; k++)
+		for (int k = 0; k < matrixWidth; k++)
 		{
-			cout << "-";
+			cout << "\xcd\xcd\xcd\xce";
 		}
 
-		cout << "\n";
+		cout << "\xcd\n";
 	}
+}
+
+bool HSystem::findPosition()
+{
+	bool foundPosition = false;
+
+	for (roomPositionY = 0; roomPositionY < matrixHeight; roomPositionY++)
+	{
+		for (roomPositionX = 0; roomPositionX < matrixWidth; roomPositionX++)
+		{
+			if (!matrix[roomPositionY][roomPositionX])
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 bool HSystem::positionRoom()
 {
-	for (roomPositionY = 0; roomPositionY < matrixHeight; roomPositionY++)
-	{
-		roomPositionX = 0;
-
-		while (matrix[roomPositionY][roomPositionX] && roomPositionX < matrixWidth)
-		{
-			roomPositionX++;
-		}
-	}
-
-	if (matrix[roomPositionY][roomPositionX])
+	if (!findPosition())
 	{
 		return false;
 	}
@@ -753,15 +759,15 @@ Vertex<Room>* HSystem::getRoom(const string &s) const
 	return g.getVertex(Room(s));
 }
 
-void HSystem::addConnectionGraphViewer(unsigned src, unsigned dst)
+void HSystem::addConnectionGraphViewer(const Pipe &pipe) // FALTA WEIGHT!!!
 {
 	int currentID = nextID;
 
-	if (src < rooms.size() && dst < rooms.size())
+	if (rooms.find(pipe.source()) != rooms.end() && rooms.find(pipe.dest()) != rooms.end())
 	{
-		pipes[currentID] = Pipe(src, dst, 70.0);
-		gv->addEdge(currentID, src, dst, EdgeType::DIRECTED);
-		gv->setEdgeLabel(currentID, "70.0");
+		pipes[currentID] = pipe;
+		gv->addEdge(currentID, pipe.source(), pipe.dest(), EdgeType::DIRECTED);
+		gv->setEdgeLabel(currentID, UI::FormatWeight(pipe.weight(), 1));
 		gv->rearrange();
 		nextID++;
 	}
@@ -772,56 +778,75 @@ void HSystem::addRoomGraphViewer(unsigned vertexId, const Room& room)
 	rooms[vertexId] = room;
 	gv->addNode(vertexId, convertPositionX(room.getX()), convertPositionY(room.getY()));
 	gv->setVertexLabel(vertexId, formatRoom(room));
-	setVertexColor(vertexId, room.getTemperature());
+
+	if (room.isEnabled())
+	{
+		setVertexColor(vertexId, room.getTemperature());
+	}
+	else
+	{
+		gv->setVertexColor(vertexId, "DARK_GRAY");
+	}
+
 	gv->rearrange();
 }
 
 void HSystem::changeTemperatureGraphViewer(Vertex<Room>* &room)
 {
-	rooms.at(room->id).setTemperature(room->info.getTemperature());
-	gv->setVertexLabel(room->id, formatRoom(room->info));
-	setVertexColor(room->id, room->info.getTemperature());
-	gv->rearrange();
+	if (rooms.find(room->id) != rooms.end())
+	{
+		rooms[room->id].setTemperature(room->info.getTemperature());
+		gv->setVertexLabel(room->id, formatRoom(room->info));
+		setVertexColor(room->id, room->info.getTemperature());
+		gv->rearrange();
+	}
 }
 
-void HSystem::removeRoomGraphViewer(Vertex<Room>* &room)
+void HSystem::removeRoomGraphViewer(unsigned vertexId)
 {
-	map<unsigned, Pipe>::iterator it = pipes.begin();
-	map<unsigned, Pipe>::iterator ite = pipes.end();
+	map<unsigned, Pipe>::iterator currentPipe = pipes.begin();
+	map<unsigned, Room>::iterator currentRoom = rooms.find(vertexId);
 
-	if (room->id < rooms.size())
+	if (currentRoom != rooms.end())
 	{
-		rooms.erase(room->id);
-		gv->removeNode(room->id);
+		rooms.erase(currentRoom);
+		gv->removeNode(vertexId);
 		gv->rearrange();
 
-		while (it != ite)
+		while (currentPipe != pipes.end())
 		{
-			if (it->second.source() == room->id || it->second.dest() == room->id)
+			if (currentPipe->second.source() == vertexId || currentPipe->second.dest() == vertexId)
 			{
-				pipes.erase(it);
+				currentPipe = pipes.erase(currentPipe);
 			}
 			else
 			{
-				it++;
+				currentPipe++;
 			}
 		}
 	}
 }
 
+void HSystem::changeWeightGraphViewer(unsigned edgeId, unsigned weight)
+{
+	if (pipes.find(edgeId) != pipes.end())
+	{
+		pipes[edgeId].change(weight);
+		gv->setEdgeLabel(edgeId, UI::FormatWeight(weight, 1));
+		gv->rearrange();
+	}
+}
+
 void HSystem::removeConnectionGraphViewer(unsigned src, unsigned dst)
 {
-	if (src < rooms.size() && dst < rooms.size())
+	for (auto &e : pipes)
 	{
-		for (auto &e : pipes)
+		if (e.second.source() == src && e.second.dest() == dst)
 		{
-			if (e.second.source() == src && e.second.dest() == dst)
-			{
-				gv->removeEdge(e.first);
-				gv->rearrange();
-				pipes.erase(e.first);
-				break;
-			}
+			gv->removeEdge(e.first);
+			gv->rearrange();
+			pipes.erase(e.first);
+			break;
 		}
 	}
 }

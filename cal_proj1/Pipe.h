@@ -55,6 +55,11 @@ public:
 		return _weight;
 	}
 
+	void change(unsigned weight)
+	{
+		_weight = weight;
+	}
+
 	void read(ifstream &fin)
 	{
 		fin.read((char*)&_src, sizeof(unsigned));

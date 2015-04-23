@@ -313,58 +313,6 @@ vector<T> Graph<T>::bfs(Vertex<T> *v) const
 }
 
 template <class T>
-int Graph<T>::maxNewChildren(Vertex<T> *v, T &inf) const
-{
-	vector<T> res;
-	queue<Vertex<T> *> q;
-	queue<int> level;
-
-	int maxChildren = 0;
-
-	inf = v->info;
-	q.push(v);
-	level.push(0);
-	v->visited = true;
-
-	while (!q.empty())
-	{
-		Vertex<T> *v1 = q.front();
-
-		q.pop();
-		res.push_back(v1->info);
-
-		int l = level.front();
-
-		level.pop(); 
-		l++;
-
-		int nChildren = 0;
-
-		typename vector<Edge<T> >::iterator it = v1->adj.begin();
-		typename vector<Edge<T> >::iterator ite = v1->adj.end();
-
-		for (Vertex<T>* v : v1->adj)
-		{
-			if (v->dest->visited == false)
-			{
-				v->dest->visited = true;
-				q.push(v->dest);
-				level.push(l);
-				nChildren++;
-			}
-		}
-
-		if (nChildren > maxChildren)
-		{
-			maxChildren = nChildren;
-			inf = v1->info;
-		}
-	}
-
-	return maxChildren;
-}
-
-template <class T>
 Vertex<T>* Graph<T>::getVertex(const T &src) const
 {
 	for (Vertex<T>* v : vertices)

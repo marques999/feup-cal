@@ -156,8 +156,7 @@ void settingsMenu()
 	settingsMenu.addItem('9', "<- Back");
 	settingsMenu.addHandler('9', nullptr);
 
-		settingsMenu.run();
-
+	settingsMenu.run();
 }
 
 void mainMenu()

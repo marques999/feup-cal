@@ -26,8 +26,7 @@ namespace UI
 		int begin = (s.size() % 2 == 0) ? (23 - (s.size() / 2)) : (22 - (s.size() / 2));
 		int end = 22 + (s.size() / 2);
 
-		cout << "\n\t\t-------------------------------------------------\n";
-		cout << "\t\t| ";
+		cout << "\n\t\tษอออออออออออออออออออออออออออออออออออออออออออออออป\n\t\tบ ";
 
 		for (int i = 0; i < begin; i++)
 		{
@@ -41,8 +40,7 @@ namespace UI
 			cout << " ";
 		}
 
-		cout << "|\n";
-		cout << "\t\t-------------------------------------------------\n\n";
+		cout << "บ\n\t\tศอออออออออออออออออออออออออออออออออออออออออออออออผ\n\n";
 	}
 
 	void DisplayFrameNoCls(const string &s)
@@ -50,8 +48,7 @@ namespace UI
 		int begin = (s.size() % 2 == 0) ? (23 - (s.size() / 2)) : (22 - (s.size() / 2));
 		int end = 22 + (s.size() / 2);
 
-		cout << "\n\t\t-------------------------------------------------\n";
-		cout << "\t\t| ";
+		cout << "\n\t\tษอออออออออออออออออออออออออออออออออออออออออออออออป\n\t\tบ ";
 
 		for (int i = 0; i < begin; i++)
 		{
@@ -65,8 +62,7 @@ namespace UI
 			cout << " ";
 		}
 
-		cout << "|\n";
-		cout << "\t\t-------------------------------------------------\n\n";
+		cout << "บ\n\t\tศอออออออออออออออออออออออออออออออออออออออออออออออผ\n\n";
 	}
 
 	void DisplayMessage(const string &msg)
@@ -100,34 +96,47 @@ namespace UI
 
 	void DisplayTable(int c, const vector<string> &labels, const int length[])
 	{
-		stringstream frame_begin;
-		stringstream frame_end;
+		string frameTop;
+		string frameBottom;
 		stringstream ss;
-		frame_begin << "-";
-		frame_end << "-";
-		ss << "|";
+
+		frameTop.push_back('\xc9');
+		frameBottom.push_back('\xc8');
+		ss << '\xba';
+
 		for (int i = 0; i < c; i++)
 		{
 			for (int j = 0; j < length[i]; j++)
 			{
-				frame_begin << "-";
-				frame_end << "-";
+				frameTop.push_back('\xcd');
+				frameBottom.push_back('\xcd');
 			}
+
 			ss << left << setw(length[i]) << labels[i];
-			ss << right << "|";
-			frame_begin << "-";
-			frame_end << "-";
+			ss << right << '\xba';
+			
+			if (i == c - 1)
+			{
+				frameTop.push_back('\xbb');
+				frameBottom.push_back('\xbc');
+			}
+			else 
+			{
+				frameTop.push_back('\xcb');
+				frameBottom.push_back('\xca');
+			}
 		}
-		UI::Display(frame_begin.str());
+
+		UI::Display(frameTop);
 		UI::Display(ss.str());
-		UI::Display(frame_end.str());
+		UI::Display(frameBottom);
 	}
 
 	void DisplayTableRow(int c, const vector<string> &labels, const int length[])
 	{
 		stringstream ss;
 
-		ss << "  ";
+		ss << " ";
 
 		for (int i = 0; i < c; i++)
 		{

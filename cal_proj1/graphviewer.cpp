@@ -30,18 +30,18 @@ void GraphViewer::initialize(int width, int height, bool dynamic, int port_n)
 	command += port_string;
 
 #ifdef linux
-	if (!(procId = fork())) 
+	if (!(procId = fork()))
 	{
 		system(command.c_str());
 		kill(getppid(), SIGINT);
 		exit(0);
 	}
-	else 
+	else
 	{
 		usleep(2000000);
 		con = new Connection(port_n);
 		char buff[200];
-		_sprintf(buff, "newGraph %d %d %s\n", width, height, (dynamic?"true":"false"));
+		_sprintf(buff, "newGraph %d %d %s\n", width, height, (dynamic ? "true" : "false"));
 		string str(buff);
 		con->sendMsg(str);
 	}
