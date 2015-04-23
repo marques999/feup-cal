@@ -21,13 +21,6 @@ typedef void(*MenuFunction)();
 
 class Menu
 {
-private:
-
-	void Display(const string &s)
-	{
-		cout << right << setw(40 + (s.size() / 2)) << setfill(' ') << s << endl;
-	}
-
 public:
 
 	Menu(const string &title) : _width(80), _title(title)
@@ -70,12 +63,12 @@ public:
 
 			if (it->second == string())
 			{
-				Display(menuSeparator);
+				UI::Display(menuSeparator);
 			}
 			else
 			{
 				ss << left << "\xba " << it->first << ". " << setw(_width - 7) << it->second << setw(2) << " \xba";
-				Display(ss.str());
+				UI::Display(ss.str());
 			}
 		}
 	}
@@ -87,11 +80,11 @@ public:
 
 	__forceinline void displayMenu()
 	{
-		Display(menuTop);
+		UI::Display(menuTop);
 		DisplayMenuTitle();
-		Display(menuSeparator);
+		UI::Display(menuSeparator);
 		DisplayMenuItems();
-		Display(menuBottom);
+		UI::Display(menuBottom);
 	}
 
 	__forceinline void DisplayMenuTitle()
@@ -99,7 +92,7 @@ public:
 		stringstream ss;
 
 		ss << left << "\xba " << setw(_width - 4) << _title << setw(2) << " \xba";
-		Display(ss.str());
+		UI::Display(ss.str());
 	}
 
 	__forceinline void addItem(char c, const string& desc)
@@ -116,7 +109,7 @@ public:
 	{
 		while (true)
 		{
-			system("cls");
+			UI::ClearConsole();
 			cout << "\n\n\n\n";
 			displayMenu();
 

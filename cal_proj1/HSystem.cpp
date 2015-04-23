@@ -39,13 +39,11 @@ void HSystem::initialize()
 	roomPositionX = 0;
 	roomPositionY = 0;
 	matrix = vector<vector<bool> >(matrixHeight, vector<bool>(matrixWidth, false));
-
 	gv = new GraphViewer(700, 600, false);
 	gv->setBackground("background.png");
 	gv->createWindow(700, 600);
 	gv->defineVertexColor("blue");
 	gv->defineEdgeColor("black");
-
 	addBoiler();
 	nextID = 0;
 }
@@ -367,24 +365,19 @@ void HSystem::updateMatrix()
 template <typename T>
 T readValue(const string& prompt, function<bool(T)> validator)
 {
-	bool success = false;
+	string input;
 	T val = T();
 
 	cout << endl << prompt;
-
-	string input;
-	getline(std::cin, input);
+	getline(cin, input);
 
 	if (cin.fail())
 	{
-		if (cin.eof())
+		cin.clear();
+
+		if (!cin.eof())
 		{
-			cin.clear();
-		}
-		else
-		{
-			cin.clear();
-			cout << "ERROR: invalid value entered.";
+			throw InvalidParameter();
 		}
 	}
 
@@ -392,18 +385,12 @@ T readValue(const string& prompt, function<bool(T)> validator)
 
 	if (!(ss >> val) || ss.rdbuf()->in_avail() != 0)
 	{
-		cout << "ERROR: invalid value entered.";
+		throw InvalidParameter();
 	}
-	else
+
+	if (!validator(val))
 	{
-		if (validator(val))
-		{
-			success = true;
-		}
-		else
-		{
-			cout << "ERROR: invalid value entered.";
-		}
+		throw InvalidParameter();
 	}
 
 	return val;
@@ -415,7 +402,11 @@ T readValue(const string& prompt)
 	return readValue<T>(prompt, [](T) { return true; });
 }
 
-static const string promptFilename = "Please choose a file : ";
+static const string promptFilename = "Please enter a filename(extension will be added automatically): ";
+static const string pressEnterLoad = "Press <enter> to load the selected file...";
+static const string graphLoadSuccess = "INFORMATION: graph successfully loaded from file.";
+static const string graphSaveSuccess = "INFORMATION: graph successfully written to file.";
+static const string graphOverwrite = "QUESTION: A file with that name already exists.\nDo you want to overwrite it ? (y/N) : ";
 
 void HSystem::loadGraph()
 {
@@ -449,8 +440,8 @@ void HSystem::loadGraph()
 			}
 		}
 
-		cout << "\n";
-		UI::Display("Press <enter> to load the selected file...");
+		cout << endl;
+		UI::Display(pressEnterLoad);
 
 		int c = _getch();
 
@@ -484,7 +475,7 @@ void HSystem::loadGraph()
 	}
 
 	closedir(dirp);
-	UI::DisplayMessage("INFORMATION: Graph loaded successfully!");
+	UI::DisplayMessage(graphLoadSuccess);
 }
 
 void HSystem::saveGraph() const
@@ -493,14 +484,14 @@ void HSystem::saveGraph() const
 	char userChoice;
 	ifstream in;
 
-	graphFilename = readValue<string>("Please enter a filename (extension will be added automatically): ");
+	graphFilename = readValue<string>(promptFilename);
 	graphFilename += ".graph";
 	in.open(graphFilename);
 
 	if (in.is_open() || in.good())
 	{
 		in.close();
-		userChoice = readValue<char>("QUESTION: A file with that name already exists.\nDo you want to overwrite it? (y/N) : ");
+		userChoice = readValue<char>(graphOverwrite);
 
 		if (userChoice != 'y')
 		{
@@ -509,7 +500,7 @@ void HSystem::saveGraph() const
 	}
 
 	saveGraph(graphFilename);
-	UI::DisplayMessage("INFORMATION: graph successfully written to file.");
+	UI::DisplayMessage(graphSaveSuccess);
 }
 
 void HSystem::addRoom()
@@ -775,14 +766,14 @@ void HSystem::drawFloorplan(int x, int y)
 	UI::DisplayFrame("POSITION ROOM");
 
 	string firstColumn;
-	
+
 	for (int k = 0; k < matrixWidth; k++)
 	{
 		if (k == 0)
 		{
 			firstColumn += "\xc9\xcd\xcd\xcd\xcb";
 		}
-		else if(k == matrixWidth - 1)
+		else if (k == matrixWidth - 1)
 		{
 			firstColumn += "\xcd\xcd\xcd\xbb";
 		}
@@ -798,7 +789,7 @@ void HSystem::drawFloorplan(int x, int y)
 	{
 		string oddColumn;
 		string evenColumn;
-	
+
 		oddColumn += '\xba';
 
 		for (int j = 0; j < matrixWidth; j++)
@@ -814,7 +805,7 @@ void HSystem::drawFloorplan(int x, int y)
 		}
 
 		UI::Display(oddColumn);
-		
+
 		evenColumn += (i == matrixHeight - 1 ? '\xc8' : '\xcc');
 
 		for (int k = 0; k < matrixWidth; k++)

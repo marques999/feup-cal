@@ -73,18 +73,15 @@ private:
 
 class InvalidParameter
 {
-	string param;
-
 public:
 
-	InvalidParameter(const string &p)
+	InvalidParameter()
 	{
-		param = p;
 	}
 
 	string str()
 	{
-		return "ERROR: invalid parameter " + param + ".";
+		return "ERROR: you have entered an invalid value.";
 	}
 };
 
