@@ -23,6 +23,11 @@ public:
 	{
 	}
 
+	Pipe(ifstream &fin)
+	{
+		read(fin);
+	}
+
 	Pipe(unsigned src, unsigned dst) : _src(src), _dst(dst)
 	{
 	}

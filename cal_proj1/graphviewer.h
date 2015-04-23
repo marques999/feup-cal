@@ -10,8 +10,8 @@
 
 #include <stdlib.h>
 #include <signal.h>
-#include <string>
 
+#include "Common.h"
 #include "edgetype.h"
 #include "connection.h"
 
@@ -67,6 +67,7 @@ public:
 	 * @param height Altura da janela a criar.
 	 */
 	bool createWindow(int width, int height);
+
 	/**
 	 * Fecha a janela a ser utilizada para visualização.
 	 */
@@ -80,11 +81,13 @@ public:
 	 * @param y Posição vertical do nó.
 	 */
 	bool addNode(int id, int x, int y);
+
 	/**
 	 * Acrescenta um nó à representação do grafo, numa posição ao critério do programa.
 	 * @param id Identificador único do nó.
 	 */
 	bool addNode(int id);
+
 	/**
 	 * Acrescenta uma aresta à representação do grafo.
 	 * @param id Identificador único da aresta.
@@ -119,6 +122,7 @@ public:
 	 * @param label Novo texto da aresta.
 	 */
 	bool setEdgeLabel(int id, string label);
+
 	/**
 	 * Função que define a cor de uma aresta.
 	 * @param id Identificador único da aresta com a cor a alterar.

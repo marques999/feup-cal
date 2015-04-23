@@ -34,8 +34,8 @@ public:
 	void saveGraph(const string &filename) const;
 	void readEdge(ifstream &fin);
 	void readVertex(ifstream &fin);
-	void writeEdge(ofstream &fout) const;
-	void writeVertex(unsigned vertexId, const Room &room, ofstream &fout) const;
+	void writeEdge(unsigned edgeId, ofstream &fout) const;
+	void writeVertex(unsigned vertexId, ofstream &fout) const;
 
 	void disableRoom();
 	void displayRooms() const;
@@ -56,33 +56,47 @@ public:
 
 private:
 
+	int matrixWidth;
+	int matrixHeight;
+	int roomPositionX;
+	int roomPositionY;
+
+	GraphViewer *gv;
+	Graph<Room> g;
 	map<unsigned, Room> rooms;
 	map<unsigned, Pipe> pipes;
+	vector<vector<bool> > matrix;
 
 	const double defaultWeight = 70.0;
+	const string promptRoomDisable = "Enter the room name to be disabled: ";
+	const string promptRoomEnable = "Enter the room name to be enabled: ";
+	const string radiatorIsBoiler = "ERROR: boiler status can't be changed by the user.";
+	const string radiatorDisableFail = "ERROR: radiator already disabled, nothing to do...";
+	const string radiatorDisableSuccess = "INFORMATION: room radiator disabled successfully!";
+	const string radiatorEnableFail = "ERROR: radiator already enabled, nothing to do...";
+	const string radiatorEnableSuccess = "INFORMATION: room radiator enabled successfully!";
+	const string roomConnectSuccess = "INFORMATION: rooms were connected successfully!";
+	const string roomConnectFail = "ERROR: rooms are already connected, please choose another pair.";
+	const string roomDisconnectSuccess = "INFORMATION: rooms were disconnected successfully!";
+	const string roomDisconnectFail = "ERROR: rooms are not connected to each other.";
+	const string roomConnectBoiler = "ERROR: destination room is the boiler, please choose another one.";
+	const string connectionHasCycles = "ERROR: connections between rooms must not create cycles.";
+	const string unknownError = "ERROR: what have you done???";
+	const string resetWeightSuccess = "INFORMATION: weights reset successfully!";
 
 	char* formatRoom(const Room &r) const;
 
 	string roomName(unsigned id) const;
 
-	int roomPositionX;
-	int roomPositionY;
 	unsigned convertPositionX(int x);
 	unsigned convertPositionY(int y);
-	
 	void drawFloorplan(int x, int y);
 	bool positionRoom();
-	unsigned matrixWidth;
-	unsigned matrixHeight;
-
-	vector<vector<bool> > matrix;
 	void setVertexColor(unsigned vertexId, double roomTemperature) const;
 	void removePosition(int x, int y);
 	void updateMatrix();
 	unsigned nextID;
 	Vertex<Room>* getRoom(const string &s) const;
-	GraphViewer *gv;
-	Graph<Room> g;
 };
 
 #endif /* __HSYSTEM_H_ */

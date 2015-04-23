@@ -145,7 +145,21 @@ namespace UI
 	string Format(unsigned n, unsigned w)
 	{
 		ostringstream os;
-		os << setw(w) << left << fixed << setprecision(0) << n;
+		os << setw(w) << left << fixed << n;
+		return os.str();
+	}
+
+	string FormatWeight(double n, unsigned w)
+	{
+		ostringstream os;
+		os << setw(w + 3) << left << fixed << setprecision(w) << n;
+		return os.str();
+	}
+
+	string FormatTemperature(double n)
+	{
+		ostringstream os;
+		os << setw(5) << fixed << setprecision(1) << n << "C";
 		return os.str();
 	}
 }

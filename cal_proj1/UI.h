@@ -65,12 +65,28 @@ namespace UI
 	void DisplayTableRow(int c, const vector<string> &labels, const int length[]);
 
 	/**
-	* @brief formats a fixed digit number (eg. the tax number)
-	* @param n number
+	* @brief formats a fixed digit number
+	* @param n value
 	* @param w number of digits (field width)
 	* @return returns a string containing the formatted value
 	*/
 	string Format(unsigned n, unsigned w);
+
+	/**
+	* @brief formats a floating point number
+	* @param n value
+	* @param w number of precision digits (field width)
+	* @return returns a string containing the formatted value
+	*/
+	string FormatWeight(double n, unsigned w);
+
+	/**
+	* @brief formats a floating point number as a temperature value
+	* @param n value
+	* @param w number of digits (field width)
+	* @return returns a string containing the formatted value
+	*/
+	string FormatTemperature(double n);
 }
 
 #endif /* __UI_H_ */

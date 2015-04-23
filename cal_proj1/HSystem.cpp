@@ -12,22 +12,6 @@
 
 #include "HSystem.h"
 
-static const string promptRoomDisable = "Enter the room name to be disabled: ";
-static const string promptRoomEnable = "Enter the room name to be enabled: ";
-static const string radiatorIsBoiler = "ERROR: boiler status can't be changed by the user.";
-static const string radiatorDisableFail = "ERROR: radiator already disabled, nothing to do...";
-static const string radiatorDisableSuccess = "INFORMATION: room radiator disabled successfully!";
-static const string radiatorEnableFail = "ERROR: radiator already enabled, nothing to do...";
-static const string radiatorEnableSuccess = "INFORMATION: room radiator enabled successfully!";
-static const string roomConnectSuccess = "INFORMATION: rooms were connected successfully!";
-static const string roomConnectFail = "ERROR: rooms are already connected, please choose another pair.";
-static const string roomDisconnectSuccess = "INFORMATION: rooms were disconnected successfully!";
-static const string roomDisconnectFail = "ERROR: rooms are not connected to each other.";
-static const string roomConnectBoiler = "ERROR: destination room is the boiler, please choose another one.";
-static const string connectionHasCycles = "ERROR: connections between rooms must not create cycles.";
-static const string unknownError = "ERROR: what have you done???";
-static const string resetWeightSuccess = "INFORMATION: weights reset successfully!";
-
 HSystem::HSystem()
 {
 	nextID = 0;
@@ -96,7 +80,7 @@ void HSystem::displayConnections() const
 		tableRow[0] = UI::Format(c.first, 8);
 		tableRow[1] = roomName(c.second.source());
 		tableRow[2] = roomName(c.second.dest());
-		tableRow[3] = UI::Format(c.second.weight(), 8);
+		tableRow[3] = UI::FormatWeight(c.second.weight(), 1);
 
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
 	}
@@ -122,7 +106,7 @@ void HSystem::displayRooms() const
 		tableRow[1] = r.second.getName();
 		tableRow[2] = UI::Format(r.second.getX(), 4);
 		tableRow[3] = UI::Format(r.second.getY(), 4);
-		tableRow[4] = UI::Format(r.second.getTemperature(), 14);
+		tableRow[4] = UI::FormatTemperature(r.second.getTemperature());
 		tableRow[5] = r.second.isEnabled() ? "Enabled" : "Disabled";
 
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
@@ -136,9 +120,29 @@ string HSystem::roomName(unsigned id) const
 	return rooms.find(id)->second.getName();
 }
 
+void HSystem::readEdge(ifstream &fin)
+{
+	unsigned edgeId;
+
+	fin.read((char*)&edgeId, sizeof(unsigned));
+
+	Pipe newPipe(fin);
+
+	map<unsigned, Room>::const_iterator srcRoom = rooms.find(newPipe.source());
+	map<unsigned, Room>::const_iterator dstRoom = rooms.find(newPipe.dest());
+
+	if (newPipe.dest() == 0 || srcRoom == rooms.end() || dstRoom == rooms.end())
+	{
+		return;
+	}
+
+	g.addEdge(srcRoom->second, dstRoom->second, newPipe.weight());
+	addConnectionGraphViewer(newPipe.source(), newPipe.dest());
+}
+
 void HSystem::readVertex(ifstream &fin)
 {
-	int vertexId;
+	unsigned vertexId;
 
 	fin.read((char*)&vertexId, sizeof(unsigned));
 
@@ -151,12 +155,35 @@ void HSystem::readVertex(ifstream &fin)
 	}
 }
 
-void HSystem::writeVertex(unsigned vertexId, const Room &room, ofstream &fout) const
+void HSystem::writeEdge(unsigned edgeId, ofstream &fout) const
 {
-	if (vertexId < rooms.size())
+	if (edgeId >= pipes.size() || pipes.find(edgeId) != pipes.end())
 	{
-		fout.write((char*)vertexId, sizeof(unsigned));
-		room.write(fout);
+		return;
+	}
+
+	Pipe currentEdge = pipes.at(edgeId);
+	map<unsigned, Room>::const_iterator srcRoom = rooms.find(currentEdge.source());
+	map<unsigned, Room>::const_iterator dstRoom = rooms.find(currentEdge.dest());
+
+	if (currentEdge.dest() == 0 || srcRoom == rooms.end() || dstRoom == rooms.end())
+	{
+		return;
+	}
+
+	fout.write((char*)&edgeId, sizeof(unsigned));
+	pipes.at(edgeId).write(fout);
+}
+
+void HSystem::writeVertex(unsigned vertexId, ofstream &fout) const
+{
+	if (vertexId < rooms.size() && rooms.find(vertexId) != rooms.end())
+	{
+		if (vertexId != 0)
+		{
+			fout.write((char*)&vertexId, sizeof(unsigned));
+			rooms.at(vertexId).write(fout);
+		}
 	}
 }
 
@@ -181,6 +208,11 @@ void HSystem::loadGraph(const string &filename)
 
 	in.read((char*)&numberVertices, sizeof(size_t));
 
+	if (in.eof())
+	{
+		return;
+	}
+
 	for (size_t i = 0; !in.eof() && i < numberVertices; i++)
 	{
 		readVertex(in);
@@ -197,8 +229,14 @@ void HSystem::loadGraph(const string &filename)
 
 	in.read((char*)&numberEdges, sizeof(size_t));
 
+	if (in.eof())
+	{
+		return;
+	}
+
 	for (size_t i = 0; !in.eof() && i < numberEdges; i++)
 	{
+		readEdge(in);
 	}
 
 	in.close();
@@ -207,7 +245,6 @@ void HSystem::loadGraph(const string &filename)
 void HSystem::saveGraph(const string &filename) const
 {
 	ofstream out;
-	Room emptyRoom;
 
 	out.open(filename);
 
@@ -234,16 +271,7 @@ void HSystem::saveGraph(const string &filename) const
 
 	for (auto &e : pipes)
 	{
-		map<unsigned, Room>::const_iterator srcRoom = rooms.find(e.second.source());
-		map<unsigned, Room>::const_iterator dstRoom = rooms.find(e.second.dest());
-
-		if (srcRoom == rooms.end() || dstRoom == rooms.end())
-		{
-			continue;
-		}
-
-		out.write((char*)&(e.first), sizeof(unsigned));
-		e.second.write(out);
+		writeEdge(e.first, out);
 	}
 
 	out.close();
@@ -507,9 +535,7 @@ char* HSystem::formatRoom(const Room &r) const
 {
 	const size_t stringLength = r.getName().length() + 1;
 	char* buffer = new char[stringLength + 10];
-
 	sprintf(buffer, "%s (%.1fC)", r.getName().c_str(), r.getTemperature());
-
 	return buffer;
 }
 
@@ -627,11 +653,11 @@ void HSystem::drawFloorplan(int x, int y)
 	UI::ClearConsole();
 	UI::DisplayFrame("POSITION ROOM");
 
-	for (int i = 0; i < matrix.size(); i++)
+	for (int i = 0; i < matrixHeight; i++)
 	{
 		cout << "\t\t\t\t|";
 
-		for (int j = 0; j < matrix[i].size(); j++)
+		for (int j = 0; j < matrixWidth; j++)
 		{
 			if (i == y && j == x)
 			{
@@ -656,17 +682,14 @@ void HSystem::drawFloorplan(int x, int y)
 
 bool HSystem::positionRoom()
 {
-	roomPositionX = 0;
-	roomPositionY = 0;
-
-	while (matrix[roomPositionY][roomPositionX] && roomPositionX < matrixWidth)
+	for (roomPositionY = 0; roomPositionY < matrixHeight; roomPositionY++)
 	{
-		roomPositionX++;
-	}
+		roomPositionX = 0;
 
-	while (matrix[roomPositionY][roomPositionX] && roomPositionY < matrixHeight)
-	{
-		roomPositionY++;
+		while (matrix[roomPositionY][roomPositionX] && roomPositionX < matrixWidth)
+		{
+			roomPositionX++;
+		}
 	}
 
 	if (matrix[roomPositionY][roomPositionX])
@@ -681,32 +704,46 @@ bool HSystem::positionRoom()
 		switch (_getch())
 		{
 		case 'w':
+		{
 			if (roomPositionY > 0 && !matrix[roomPositionY - 1][roomPositionX])
 			{
 				roomPositionY--;
 			}
+
 			break;
+		}
 		case 's':
+		{
 			if (roomPositionY < matrixHeight - 1 && !matrix[roomPositionY + 1][roomPositionX])
 			{
 				roomPositionY++;
 			}
+
 			break;
+		}
 		case 'a':
+		{
 			if (roomPositionX > 0 && !matrix[roomPositionY][roomPositionX - 1])
 			{
 				roomPositionX--;
 			}
+
 			break;
+		}
 		case 'd':
+		{
 			if (roomPositionX < matrixWidth - 1 && !matrix[roomPositionY][roomPositionX + 1])
 			{
 				roomPositionX++;
 			}
+
 			break;
+		}
 		case '0':
+		{
 			matrix[roomPositionY][roomPositionX] = true;
 			return true;
+		}
 		}
 	}
 }
@@ -749,20 +786,26 @@ void HSystem::changeTemperatureGraphViewer(Vertex<Room>* &room)
 
 void HSystem::removeRoomGraphViewer(Vertex<Room>* &room)
 {
+	typename map<unsigned, Pipe>::iterator it = pipes.begin();
+	typename map<unsigned, Pipe>::iterator ite = pipes.end();
+
 	if (room->id < rooms.size())
 	{
 		rooms.erase(room->id);
 		gv->removeNode(room->id);
 		gv->rearrange();
 
-		/*	for (auto &e : connections)
+		while (it != ite)
+		{
+			if (it->second.source == room->id || it->second.dest == room->id)
 			{
-			if (e.second.first == room->id)
+				pipes.erase(it);
+			}
+			else
 			{
-			connections.erase(e.first);
+				it++;
 			}
-			}
-			*/
+		}
 	}
 }
 

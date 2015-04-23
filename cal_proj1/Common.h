@@ -25,6 +25,12 @@
 #include <string>
 #include <vector>
 
+#ifdef _MSC_VER 
+#define _sprintf sprintf_s
+#else
+#define _sprintf sprintf
+#endif
+
 using namespace std;
 
 class SourceRoomNotFound

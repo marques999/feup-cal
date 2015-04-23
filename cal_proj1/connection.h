@@ -17,7 +17,9 @@
 #include <string>
 #include <iostream>
 
+#ifdef _MSC_VER
 #pragma comment(lib, "Ws2_32.lib")
+#endif
 
 using namespace std;
 
@@ -29,6 +31,7 @@ public:
 
 	bool sendMsg(string msg);
 	string readLine();
+
 private:
 #ifdef linux
 	int sock;
