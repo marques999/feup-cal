@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#ifdef _MSC_VER 
+#ifdef _MSC_VER
 #define _sprintf sprintf_s
 #else
 #define _sprintf sprintf
@@ -71,36 +71,6 @@ private:
 	string destinationRoom;
 };
 
-class RoomExists
-{
-public:
-
-	RoomExists()
-	{
-	}
-
-	friend ostream& operator<<(ostream &os, const RoomExists &e)
-	{
-		cout << "\nERRROR: a room with the same name already exists\n";
-		return os;
-	}
-};
-
-class PermissoesInsuficientes {
-	string param;
-
-public:
-
-	PermissoesInsuficientes(const string &n) {
-		param = n;
-	}
-
-	friend ostream& operator<<(ostream &os, const PermissoesInsuficientes &e) {
-		os << "ERROR: permission denied - can't access " << e.param << " from other developers.\n";
-		return os;
-	}
-};
-
 class InvalidParameter
 {
 	string param;
@@ -114,7 +84,7 @@ public:
 
 	string str()
 	{
-		return ("ERROR: invalid parameter " + param + ".");
+		return "ERROR: invalid parameter " + param + ".";
 	}
 };
 
@@ -124,18 +94,15 @@ class FileIOException
 
 public:
 
-	FileIOException(const string &fn)
+	FileIOException(const string &s)
 	{
-		fileName = fn;
+		fileName = s;
 	}
 
-	friend ostream& operator<<(ostream &os, const FileIOException &e)
+	string str()
 	{
-		os << "\nERROR: file I/O exception occured while trying to read/write " << e.fileName << "\n";
-		return os;
+		return "ERROR: file I/O exception occured while trying to access " + fileName + ".";
 	}
 };
-
-string to_upper(const string &s);
 
 #endif /* __COMMON_H_ */

@@ -154,7 +154,7 @@ namespace UI
 	string Format(unsigned n, unsigned w)
 	{
 		ostringstream os;
-		os << setw(w) << left << fixed << n;
+		os << setw(w) << right << fixed << n;
 		return os.str();
 	}
 

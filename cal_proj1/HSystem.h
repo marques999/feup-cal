@@ -30,7 +30,9 @@ public:
 
 	void initialize();
 	void reset();
-	void loadGraph(const string &filename);
+	void loadGraph();
+	void saveGraph() const;
+	bool loadGraph(const string &filename);
 	void saveGraph(const string &filename) const;
 	void readEdge(ifstream &fin);
 	void readVertex(ifstream &fin);

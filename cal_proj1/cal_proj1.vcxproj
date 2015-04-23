@@ -91,6 +91,7 @@
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="connection.h" />
+    <ClInclude Include="dirent.h" />
     <ClInclude Include="Edge.h" />
     <ClInclude Include="edgetype.h" />
     <ClInclude Include="Graph.h" />

@@ -107,7 +107,15 @@ __forceinline void hSystem_load()
 {
 	if (hSystem != nullptr)
 	{
-		hSystem->loadGraph("this.graph");
+		hSystem->loadGraph();
+	}
+}
+
+__forceinline void hSystem_save()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->saveGraph();
 	}
 }
 
@@ -172,7 +180,7 @@ void mainMenu()
 	mainMenu.addItem('3', "Load graph");
 	mainMenu.addHandler('3', hSystem_load);
 	mainMenu.addItem('4', "Save graph");
-	mainMenu.addHandler('4', nullptr);
+	mainMenu.addHandler('4', hSystem_save);
 	mainMenu.addItem('5', "Reset");
 	mainMenu.addHandler('5', hSystem_reset);
 	mainMenu.addSeparator();
@@ -185,5 +193,6 @@ int main()
 {
 	hSystem = new HSystem();
 	mainMenu();
+
 	return 0;
 }

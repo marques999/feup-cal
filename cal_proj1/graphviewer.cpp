@@ -38,7 +38,7 @@ void GraphViewer::initialize(int width, int height, bool dynamic, int port_n)
 	}
 	else
 	{
-		usleep(2000000);
+		usleep(1000000);
 		con = new Connection(port_n);
 		char buff[200];
 		_sprintf(buff, "newGraph %d %d %s\n", width, height, (dynamic ? "true" : "false"));
@@ -70,8 +70,8 @@ void GraphViewer::initialize(int width, int height, bool dynamic, int port_n)
 	// Close process and thread handles.
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
+	Sleep(1000);
 
-	Sleep(2000);
 	con = new Connection(port_n);
 
 	char buff[200];

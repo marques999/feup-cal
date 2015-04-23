@@ -12,6 +12,12 @@
 
 #include "HSystem.h"
 
+#ifdef _WIN32
+#include "dirent.h"
+#else
+#include <dirent.h>
+#endif
+
 HSystem::HSystem()
 {
 	nextID = 0;
@@ -30,6 +36,8 @@ void HSystem::initialize()
 {
 	matrixWidth = 6;
 	matrixHeight = 6;
+	roomPositionX = 0;
+	roomPositionY = 0;
 	matrix = vector<vector<bool> >(matrixHeight, vector<bool>(matrixWidth, false));
 
 	gv = new GraphViewer(700, 600, false);
@@ -44,11 +52,25 @@ void HSystem::initialize()
 
 void HSystem::reset()
 {
-	gv->closeWindow();
+	for (auto& pipe : pipes)
+	{
+		gv->removeEdge(pipe.first);
+	}
+
+	for (auto& room : rooms)
+	{
+		gv->removeNode(room.first);
+	}
+
 	rooms.clear();
 	pipes.clear();
 	g = Graph<Room>();
-	initialize();
+	matrix.clear();
+	matrix = vector<vector<bool> >(matrixHeight, vector<bool>(matrixWidth, false));
+	roomPositionX = 0;
+	roomPositionY = 0;
+	nextID = 0;
+	addBoiler();
 }
 
 unsigned HSystem::convertPositionX(int x)
@@ -77,7 +99,7 @@ void HSystem::displayConnections() const
 	{
 		vector<string> tableRow(rowCount);
 
-		tableRow[0] = UI::Format(p.first, 8);
+		tableRow[0] = UI::Format(p.first, 7);
 		tableRow[1] = roomName(p.second.source());
 		tableRow[2] = roomName(p.second.dest());
 		tableRow[3] = UI::FormatWeight(p.second.weight(), 1);
@@ -91,7 +113,7 @@ void HSystem::displayConnections() const
 void HSystem::displayRooms() const
 {
 	const int rowCount = 6;
-	const int tableLength[rowCount] = { 8, 24, 5, 5, 16, 12 };
+	const int tableLength[rowCount] = { 8, 24, 5, 5, 13, 12 };
 
 	vector<string> tableLabel = { " Room", " Name", "  X", "  Y", " Temperature", " Status" };
 
@@ -102,10 +124,10 @@ void HSystem::displayRooms() const
 	{
 		vector<string> tableRow(rowCount);
 
-		tableRow[0] = UI::Format(r.first, 8);
+		tableRow[0] = UI::Format(r.first, 7);
 		tableRow[1] = r.second.getName();
-		tableRow[2] = UI::Format(r.second.getX(), 4);
-		tableRow[3] = UI::Format(r.second.getY(), 4);
+		tableRow[2] = UI::Format(r.second.getX(), 2);
+		tableRow[3] = UI::Format(r.second.getY(), 2);
 		tableRow[4] = UI::FormatTemperature(r.second.getTemperature());
 		tableRow[5] = r.second.isEnabled() ? "Enabled" : "Disabled";
 
@@ -187,8 +209,10 @@ void HSystem::writeVertex(unsigned vertexId, ofstream &fout) const
 	}
 }
 
-void HSystem::loadGraph(const string &filename)
+bool HSystem::loadGraph(const string &filename)
 {
+	reset();
+
 	ifstream in;
 	Room emptyRoom;
 
@@ -201,7 +225,7 @@ void HSystem::loadGraph(const string &filename)
 
 	if (in.eof())
 	{
-		return;
+		return false;
 	}
 
 	size_t numberVertices;
@@ -210,7 +234,7 @@ void HSystem::loadGraph(const string &filename)
 
 	if (in.eof())
 	{
-		return;
+		return false;
 	}
 
 	for (size_t i = 0; !in.eof() && i < numberVertices; i++)
@@ -222,7 +246,7 @@ void HSystem::loadGraph(const string &filename)
 
 	if (in.eof())
 	{
-		return;
+		return false;
 	}
 
 	size_t numberEdges;
@@ -231,7 +255,7 @@ void HSystem::loadGraph(const string &filename)
 
 	if (in.eof())
 	{
-		return;
+		return false;
 	}
 
 	for (size_t i = 0; !in.eof() && i < numberEdges; i++)
@@ -240,6 +264,8 @@ void HSystem::loadGraph(const string &filename)
 	}
 
 	in.close();
+
+	return true;
 }
 
 void HSystem::saveGraph(const string &filename) const
@@ -387,6 +413,103 @@ template <typename T>
 T readValue(const string& prompt)
 {
 	return readValue<T>(prompt, [](T) { return true; });
+}
+
+static const string promptFilename = "Please choose a file : ";
+
+void HSystem::loadGraph()
+{
+	vector<string> foundFiles;
+	size_t vectorIndex = 0;
+	DIR* dirp = opendir(".");
+	struct dirent* dentry;
+
+	while ((dentry = readdir(dirp)) != NULL)
+	{
+		if (strlen(dentry->d_name) > 6 && strcmp(dentry->d_name + strlen(dentry->d_name) - 6, ".graph") == 0)
+		{
+			foundFiles.push_back(dentry->d_name);
+		}
+	}
+
+	while (true)
+	{
+		UI::ClearConsole();
+		UI::DisplayFrame("LOAD GRAPH");
+
+		for (size_t i = 0; i < foundFiles.size(); i++)
+		{
+			if (i == vectorIndex)
+			{
+				UI::Display("-> " + foundFiles[i]);
+			}
+			else
+			{
+				UI::Display("   " + foundFiles[i]);
+			}
+		}
+
+		cout << "\n";
+		UI::Display("Press <enter> to load the selected file...");
+
+		int c = _getch();
+
+		if (c == 0xe0)
+		{
+			switch (_getch())
+			{
+			case 72:
+			{
+				if (vectorIndex > 0)
+				{
+					vectorIndex--;
+				}
+				break;
+			}
+			case 80:
+			{
+				if (vectorIndex < foundFiles.size() - 1)
+				{
+					vectorIndex++;
+				}
+				break;
+			}
+			}
+		}
+		else if (c == 0x0d || c == 0x0a)
+		{
+			loadGraph(foundFiles[vectorIndex]);
+			break;
+		}
+	}
+
+	closedir(dirp);
+	UI::DisplayMessage("INFORMATION: Graph loaded successfully!");
+}
+
+void HSystem::saveGraph() const
+{
+	string graphFilename;
+	char userChoice;
+	ifstream in;
+
+	graphFilename = readValue<string>("Please enter a filename (extension will be added automatically): ");
+	graphFilename += ".graph";
+	in.open(graphFilename);
+
+	if (in.is_open() || in.good())
+	{
+		in.close();
+		userChoice = readValue<char>("QUESTION: A file with that name already exists.\nDo you want to overwrite it? (y/N) : ");
+
+		if (userChoice != 'y')
+		{
+			return;
+		}
+	}
+
+	saveGraph(graphFilename);
+	UI::DisplayMessage("INFORMATION: graph successfully written to file.");
 }
 
 void HSystem::addRoom()
@@ -651,30 +774,68 @@ void HSystem::drawFloorplan(int x, int y)
 	UI::ClearConsole();
 	UI::DisplayFrame("POSITION ROOM");
 
+	string firstColumn;
+	
+	for (int k = 0; k < matrixWidth; k++)
+	{
+		if (k == 0)
+		{
+			firstColumn += "\xc9\xcd\xcd\xcd\xcb";
+		}
+		else if(k == matrixWidth - 1)
+		{
+			firstColumn += "\xcd\xcd\xcd\xbb";
+		}
+		else
+		{
+			firstColumn += "\xcd\xcd\xcd\xcb";
+		}
+	}
+
+	UI::Display(firstColumn);
+
 	for (int i = 0; i < matrixHeight; i++)
 	{
-		cout << "   \t\t\t\xba";
+		string oddColumn;
+		string evenColumn;
+	
+		oddColumn += '\xba';
 
 		for (int j = 0; j < matrixWidth; j++)
 		{
 			if (i == y && j == x)
 			{
-				cout << " X \xba";
+				oddColumn += " X \xba";
 			}
 			else
 			{
-				cout << (matrix[i][j] ? " R \xba" : "   \xba");
+				oddColumn += (matrix[i][j] ? " R \xba" : "   \xba");
 			}
 		}
 
-		cout << "\n   \t\t\t\xcd";
+		UI::Display(oddColumn);
+		
+		evenColumn += (i == matrixHeight - 1 ? '\xc8' : '\xcc');
 
 		for (int k = 0; k < matrixWidth; k++)
 		{
-			cout << "\xcd\xcd\xcd\xce";
+			if (k == matrixWidth - 1)
+			{
+				evenColumn += "\xcd\xcd\xcd";
+				evenColumn += (i == matrixHeight - 1 ? '\xbc' : '\xb9');
+			}
+			else if (i == matrixHeight - 1)
+			{
+				evenColumn += "\xcd\xcd\xcd";
+				evenColumn += (k == matrixWidth - 1 ? '\xbc' : '\xca');
+			}
+			else
+			{
+				evenColumn += "\xcd\xcd\xcd\xce";
+			}
 		}
 
-		cout << "\xcd\n";
+		UI::Display(evenColumn);
 	}
 }
 
