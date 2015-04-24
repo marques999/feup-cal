@@ -39,10 +39,13 @@ public:
 	void writeEdge(unsigned edgeId, ofstream &fout) const;
 	void writeVertex(unsigned vertexId, ofstream &fout) const;
 
-	void disableRoom();
 	void displayRooms() const;
 	void displayConnections() const;
+
+	void disableRoom();
+	void disableRoomGraphViewer(unsigned vertexId);
 	void enableRoom();
+	void enableRoomGraphViewer(unsigned vertexId, double temperature);
 	void addConnection();
 	void addConnectionGraphViewer(const Pipe& pipe);
 	void addRoom();
@@ -51,10 +54,12 @@ public:
 	void removeRoomGraphViewer(unsigned vertexId);
 	void changeTemperature();
 	void changeTemperatureGraphViewer(Vertex<Room>* &room);
+	void changeWeight(); // is it needed?
 	void changeWeightGraphViewer(unsigned edgeId, unsigned weight);
 	void removeConnection();
 	void removeConnectionGraphViewer(unsigned src, unsigned dst);
 	void resetFlow();
+	void resetFlowGraphViewer();
 	void addBoiler();
 
 private:
@@ -64,6 +69,11 @@ private:
 	int roomPositionX;
 	int roomPositionY;
 
+	double calculateTemperature(const Room &room, const Edge<Room> &pipe, double t, double q)
+	{
+		return (room.getTemperature() * pipe.weight + t*q) / (pipe.weight + q);
+	}
+
 	GraphViewer *gv;
 	Graph<Room> g;
 	map<unsigned, Room> rooms;
@@ -71,6 +81,7 @@ private:
 	vector<vector<bool> > matrix;
 
 	const double defaultWeight = 70.0;
+
 	const string promptRoomDisable = "Enter the room name to be disabled: ";
 	const string promptRoomEnable = "Enter the room name to be enabled: ";
 	const string radiatorIsBoiler = "ERROR: boiler status can't be changed by the user.";
@@ -88,6 +99,13 @@ private:
 	const string promptTemperature = "Enter the room temperature: ";
 	const string promptNewTemperature = "Enter the new room temperature: ";
 	const string temperatureSuccess = "INFORMATION: room temperature successfully changed!";
+	const string promptFilename = "Please enter a filename(extension will be added automatically): ";
+	const string pressEnterLoad = "Press <enter> to load the selected file...";
+	const string pressEnterPlace = "Press <enter> to place the room at the chosen location...";
+	const string graphLoadSuccess = "INFORMATION: graph successfully loaded from file.";
+	const string graphLoadFail = "ERROR: reached end of file prematurely, graph might not be displayed correctly.";
+	const string graphSaveSuccess = "INFORMATION: graph successfully written to file.";
+	const string graphSaveOverwrite = "QUESTION: A file with that name already exists.\nDo you want to overwrite it ? (y/N) : ";
 	const string roomConnectSuccess = "INFORMATION: rooms were connected successfully!";
 	const string roomConnectFail = "ERROR: rooms are already connected, please choose another pair.";
 	const string roomDisconnectSuccess = "INFORMATION: rooms were disconnected successfully!";

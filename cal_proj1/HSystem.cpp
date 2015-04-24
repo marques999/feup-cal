@@ -319,8 +319,17 @@ void HSystem::addBoiler()
 void HSystem::resetFlow()
 {
 	g.resetWeights(defaultWeight);
+	resetFlowGraphViewer();
 	UI::DisplayMessage(resetWeightSuccess);
-	saveGraph("this.graph");
+}
+
+void HSystem::resetFlowGraphViewer()
+{
+	for (auto &p : pipes)
+	{
+		p.second.change(defaultWeight);
+		gv->setEdgeLabel(p.first, UI::FormatWeight(defaultWeight, 1));
+	}
 }
 
 void HSystem::setVertexColor(unsigned vertexId, double roomTemperature) const
@@ -396,17 +405,31 @@ T readValue(const string& prompt, function<bool(T)> validator)
 	return val;
 }
 
+string readString(const string& prompt)
+{
+	string input;
+
+	cout << endl << prompt;
+	getline(cin, input);
+
+	if (cin.fail())
+	{
+		cin.clear();
+
+		if (!cin.eof())
+		{
+			throw InvalidParameter();
+		}
+	}
+
+	return input;
+}
+
 template <typename T>
 T readValue(const string& prompt)
 {
 	return readValue<T>(prompt, [](T) { return true; });
 }
-
-static const string promptFilename = "Please enter a filename(extension will be added automatically): ";
-static const string pressEnterLoad = "Press <enter> to load the selected file...";
-static const string graphLoadSuccess = "INFORMATION: graph successfully loaded from file.";
-static const string graphSaveSuccess = "INFORMATION: graph successfully written to file.";
-static const string graphOverwrite = "QUESTION: A file with that name already exists.\nDo you want to overwrite it ? (y/N) : ";
 
 void HSystem::loadGraph()
 {
@@ -469,13 +492,20 @@ void HSystem::loadGraph()
 		}
 		else if (c == 0x0d || c == 0x0a)
 		{
-			loadGraph(foundFiles[vectorIndex]);
+			closedir(dirp);
+
+			if (loadGraph(foundFiles[vectorIndex]))
+			{
+				UI::DisplayMessage(graphLoadSuccess);
+			}
+			else
+			{
+				UI::DisplayMessage(graphLoadFail);
+			}
+
 			break;
 		}
 	}
-
-	closedir(dirp);
-	UI::DisplayMessage(graphLoadSuccess);
 }
 
 void HSystem::saveGraph() const
@@ -484,14 +514,14 @@ void HSystem::saveGraph() const
 	char userChoice;
 	ifstream in;
 
-	graphFilename = readValue<string>(promptFilename);
+	graphFilename = readString(promptFilename);
 	graphFilename += ".graph";
 	in.open(graphFilename);
 
 	if (in.is_open() || in.good())
 	{
 		in.close();
-		userChoice = readValue<char>(graphOverwrite);
+		userChoice = readValue<char>(graphSaveOverwrite);
 
 		if (userChoice != 'y')
 		{
@@ -505,7 +535,7 @@ void HSystem::saveGraph() const
 
 void HSystem::addRoom()
 {
-	string roomName = readValue<string>(promptSourceName);
+	string roomName = readString(promptSourceName);
 
 	if (getRoom(roomName) != nullptr)
 	{
@@ -549,7 +579,7 @@ void HSystem::removePosition(int x, int y)
 
 void HSystem::removeRoom()
 {
-	string roomName = readValue<string>(promptRoomName);
+	string roomName = readString(promptRoomName);
 
 	if (getRoom(roomName) == nullptr)
 	{
@@ -585,7 +615,7 @@ void HSystem::removeRoom()
 
 void HSystem::disableRoom()
 {
-	string roomName = readValue<string>(promptRoomDisable);
+	string roomName = readString(promptRoomDisable);
 	Vertex<Room>* selectedRoom = getRoom(roomName);
 
 	if (selectedRoom == nullptr)
@@ -601,9 +631,9 @@ void HSystem::disableRoom()
 	{
 		if (selectedRoom->info.isEnabled())
 		{
-			gv->setVertexColor(selectedRoom->id, "DARK_GRAY");
-			gv->rearrange();
 			selectedRoom->info.disable();
+			disableRoomGraphViewer(selectedRoom->id);
+			cout << "ROOM STATUS :" << (getRoom(roomName)->info.isEnabled() ? "true" : "false");
 			UI::DisplayMessage(radiatorDisableSuccess);
 		}
 		else
@@ -615,7 +645,7 @@ void HSystem::disableRoom()
 
 void HSystem::enableRoom()
 {
-	string roomName = readValue<string>(promptRoomEnable);
+	string roomName = readString(promptRoomEnable);
 	Vertex<Room>* selectedRoom = getRoom(roomName);
 
 	if (selectedRoom == nullptr)
@@ -635,9 +665,8 @@ void HSystem::enableRoom()
 		}
 		else
 		{
-			setVertexColor(selectedRoom->id, selectedRoom->info.getTemperature());
 			selectedRoom->info.enable();
-			gv->rearrange();
+			enableRoomGraphViewer(selectedRoom->id, selectedRoom->info.getTemperature());
 			UI::DisplayMessage(radiatorEnableSuccess);
 		}
 	}
@@ -653,7 +682,7 @@ char* HSystem::formatRoom(const Room &r) const
 
 void HSystem::changeTemperature()
 {
-	string roomName = readValue<string>(promptRoomName);
+	string roomName = readString(promptRoomName);
 	Vertex<Room>* selectedRoom = getRoom(roomName);
 
 	if (selectedRoom == nullptr)
@@ -680,7 +709,7 @@ void HSystem::changeTemperature()
 
 void HSystem::addConnection()
 {
-	string srcName = readValue<string>(promptSourceName);
+	string srcName = readString(promptSourceName);
 	Vertex<Room>* srcRoom = getRoom(srcName);
 
 	if (srcRoom == nullptr)
@@ -688,7 +717,7 @@ void HSystem::addConnection()
 		throw SourceRoomNotFound(srcName);
 	}
 
-	string dstName = readValue<string>(promptDestinationName);
+	string dstName = readString(promptDestinationName);
 	Vertex<Room>* dstRoom = getRoom(dstName);
 
 	if (dstRoom == nullptr)
@@ -733,7 +762,7 @@ void HSystem::addConnection()
 
 void HSystem::removeConnection()
 {
-	string srcName = readValue<string>(promptSourceName);
+	string srcName = readString(promptSourceName);
 	Vertex<Room>* srcRoom = getRoom(srcName);
 
 	if (srcRoom == nullptr)
@@ -741,7 +770,7 @@ void HSystem::removeConnection()
 		throw SourceRoomNotFound(srcName);
 	}
 
-	string dstName = readValue<string>(promptDestinationName);
+	string dstName = readString(promptDestinationName);
 	Vertex<Room>* dstRoom = getRoom(dstName);
 
 	if (dstRoom == nullptr)
@@ -828,12 +857,12 @@ void HSystem::drawFloorplan(int x, int y)
 
 		UI::Display(evenColumn);
 	}
+
+	UI::Display(pressEnterPlace);
 }
 
 bool HSystem::findPosition()
 {
-	bool foundPosition = false;
-
 	for (roomPositionY = 0; roomPositionY < matrixHeight; roomPositionY++)
 	{
 		for (roomPositionX = 0; roomPositionX < matrixWidth; roomPositionX++)
@@ -859,51 +888,61 @@ bool HSystem::positionRoom()
 	{
 		drawFloorplan(roomPositionX, roomPositionY);
 
-		switch (_getch())
-		{
-		case 'w':
-		{
-			if (roomPositionY > 0 && !matrix[roomPositionY - 1][roomPositionX])
-			{
-				roomPositionY--;
-			}
+		int c = _getch();
 
-			break;
-		}
-		case 's':
+		if (c == 0xe0)
 		{
-			if (roomPositionY < matrixHeight - 1 && !matrix[roomPositionY + 1][roomPositionX])
+			switch (_getch())
 			{
-				roomPositionY++;
-			}
-
-			break;
-		}
-		case 'a':
-		{
-			if (roomPositionX > 0 && !matrix[roomPositionY][roomPositionX - 1])
+			case 72:
 			{
-				roomPositionX--;
-			}
+				if (roomPositionY > 0 && !matrix[roomPositionY - 1][roomPositionX])
+				{
+					roomPositionY--;
+				}
 
-			break;
-		}
-		case 'd':
-		{
-			if (roomPositionX < matrixWidth - 1 && !matrix[roomPositionY][roomPositionX + 1])
+				break;
+			}
+			case 80:
 			{
-				roomPositionX++;
-			}
+				if (roomPositionY < matrixHeight - 1 && !matrix[roomPositionY + 1][roomPositionX])
+				{
+					roomPositionY++;
+				}
 
-			break;
+				break;
+			}
+			case 75:
+			{
+				if (roomPositionX > 0 && !matrix[roomPositionY][roomPositionX - 1])
+				{
+					roomPositionX--;
+				}
+
+				break;
+			}
+			case 77:
+			{
+				if (roomPositionX < matrixWidth - 1 && !matrix[roomPositionY][roomPositionX + 1])
+				{
+					roomPositionX++;
+				}
+
+				break;
+			}
+			}
 		}
-		case '0':
+		else
 		{
-			matrix[roomPositionY][roomPositionX] = true;
-			return true;
-		}
+			if (c == 0x0d || c == 0x0a)
+			{
+				matrix[roomPositionY][roomPositionX] = true;
+				break;
+			}
 		}
 	}
+
+	return true;
 }
 
 Vertex<Room>* HSystem::getRoom(const string &s) const
@@ -911,15 +950,13 @@ Vertex<Room>* HSystem::getRoom(const string &s) const
 	return g.getVertex(Room(s));
 }
 
-void HSystem::addConnectionGraphViewer(const Pipe &pipe) // FALTA WEIGHT!!!
+void HSystem::addConnectionGraphViewer(const Pipe &pipe)
 {
-	int currentID = nextID;
-
 	if (rooms.find(pipe.source()) != rooms.end() && rooms.find(pipe.dest()) != rooms.end())
 	{
-		pipes[currentID] = pipe;
-		gv->addEdge(currentID, pipe.source(), pipe.dest(), EdgeType::DIRECTED);
-		gv->setEdgeLabel(currentID, UI::FormatWeight(pipe.weight(), 1));
+		pipes[nextID] = pipe;
+		gv->addEdge(nextID, pipe.source(), pipe.dest(), EdgeType::DIRECTED);
+		gv->setEdgeLabel(nextID, UI::FormatWeight(pipe.weight(), 1));
 		gv->rearrange();
 		nextID++;
 	}
@@ -1000,5 +1037,25 @@ void HSystem::removeConnectionGraphViewer(unsigned src, unsigned dst)
 			pipes.erase(e.first);
 			break;
 		}
+	}
+}
+
+void HSystem::disableRoomGraphViewer(unsigned vertexId)
+{
+	if (rooms.find(vertexId) != rooms.end())
+	{
+		rooms[vertexId].disable();
+		gv->setVertexColor(vertexId, "DARK_GRAY");
+		gv->rearrange();
+	}
+}
+
+void HSystem::enableRoomGraphViewer(unsigned vertexId, double temperature)
+{
+	if (rooms.find(vertexId) != rooms.end())
+	{
+		rooms[vertexId].enable();
+		setVertexColor(vertexId, temperature);
+		gv->rearrange();
 	}
 }
