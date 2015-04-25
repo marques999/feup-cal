@@ -168,7 +168,7 @@ namespace UI
 	string FormatTemperature(double n)
 	{
 		ostringstream os;
-		os << setw(5) << fixed << setprecision(1) << n << "C";
+		os << left << setw(5) << fixed << setprecision(1) << n << "C";
 		return os.str();
 	}
 }

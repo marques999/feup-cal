@@ -23,19 +23,18 @@ class Menu
 {
 public:
 
-	Menu(const string &title) : _width(80), _title(title)
+	Menu(const string &title) : menuWidth(80), menuTitle(title)
 	{
 	}
 
 	void setWidth(unsigned w)
 	{
-		_width = w;
-
+		menuWidth = w;
 		menuTop.push_back('\xc9');
 		menuBottom.push_back('\xc8');
 		menuSeparator.push_back('\xcc');
 
-		for (unsigned i = 1; i < _width - 1; i++)
+		for (unsigned i = 1; i < menuWidth - 1; i++)
 		{
 			menuTop.push_back('\xcd');
 			menuBottom.push_back('\xcd');
@@ -67,7 +66,7 @@ public:
 			}
 			else
 			{
-				ss << left << "\xba " << it->first << ". " << setw(_width - 7) << it->second << setw(2) << " \xba";
+				ss << left << "\xba " << it->first << ". " << setw(menuWidth - 7) << it->second << setw(2) << " \xba";
 				UI::Display(ss.str());
 			}
 		}
@@ -91,7 +90,7 @@ public:
 	{
 		stringstream ss;
 
-		ss << left << "\xba " << setw(_width - 4) << _title << setw(2) << " \xba";
+		ss << left << "\xba " << setw(menuWidth - 4) << menuTitle << setw(2) << " \xba";
 		UI::Display(ss.str());
 	}
 
@@ -119,21 +118,17 @@ public:
 			{
 				if (it->second != nullptr)
 				{
-					try 
+					try
 					{
 						it->second();
 					}
-					catch (SourceRoomNotFound &srnf)
+					catch (MessageException &e)
 					{
-						UI::DisplayMessage(srnf.str());
+						UI::DisplayMessage(e.str());
 					}
-					catch (DestinationRoomNotFound &drnf)
+					catch (CustomException &e)
 					{
-						UI::DisplayMessage(drnf.str());
-					}
-					catch (InvalidParameter &ip)
-					{
-						UI::DisplayMessage(ip.str());
+						UI::DisplayMessage(e.str());
 					}
 				}
 				else
@@ -146,13 +141,12 @@ public:
 
 private:
 
-	unsigned _width;
+	unsigned menuWidth;
 
-	string _title;
+	string menuTitle;
 	string menuTop;
 	string menuBottom;
 	string menuSeparator;
-
 	vector<pair<char, string> >_menu;
 	map<char, MenuFunction> _func;
 };

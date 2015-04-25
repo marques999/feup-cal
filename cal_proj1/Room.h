@@ -23,11 +23,6 @@ public:
 	{
 	}
 
-	Room(ifstream &fin)
-	{
-		read(fin);
-	}
-
 	Room(const string &s) : _name(s), _temperature(20.0), _enabled(true), _x(0), _y(0)
 	{
 	}
@@ -36,11 +31,16 @@ public:
 	{
 	}
 
+	Room(ifstream &fin)
+	{
+		read(fin);
+	}
+
 	~Room()
 	{
 	}
 
-	string getName() const
+	const string& getName() const
 	{
 		return _name;
 	}

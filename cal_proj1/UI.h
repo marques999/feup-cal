@@ -18,10 +18,13 @@
 namespace UI
 {
 	/**
-	 * @brief clears console buffer
+	 * @brief clears console sceren
 	 */
 	void ClearConsole();
 
+	/*
+	 * @brief prints "press any key" message and waits for user input
+	 */
 	void PauseConsole();
 
 	/**

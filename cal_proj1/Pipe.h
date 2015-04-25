@@ -19,21 +19,25 @@ class Pipe
 {
 public:
 
-	Pipe() : _src(0), _dst(0), _weight(0.0)
+	Pipe() : _src(0), _dst(0), _weight(70.0), _temperature(20.0)
+	{
+	}
+
+	Pipe(unsigned src, unsigned dst) : _src(src), _dst(dst), _weight(70.0), _temperature(20.0)
+	{
+	}
+
+	Pipe(unsigned src, unsigned dst, double weight) : _src(src), _dst(dst), _weight(weight), _temperature(20.0)
+	{
+	}
+
+	Pipe(unsigned src, unsigned dst, double weight, double temperature) : _src(src), _dst(dst), _weight(weight), _temperature(temperature)
 	{
 	}
 
 	Pipe(ifstream &fin)
 	{
 		read(fin);
-	}
-
-	Pipe(unsigned src, unsigned dst) : _src(src), _dst(dst)
-	{
-	}
-
-	Pipe(unsigned src, unsigned dst, double weight) : _src(src), _dst(dst), _weight(weight)
-	{
 	}
 
 	~Pipe()
@@ -64,6 +68,7 @@ public:
 	{
 		fin.read((char*)&_src, sizeof(unsigned));
 		fin.read((char*)&_dst, sizeof(unsigned));
+		fin.read((char*)&_temperature, sizeof(double));
 		fin.read((char*)&_weight, sizeof(double));
 	}
 
@@ -71,6 +76,7 @@ public:
 	{
 		fout.write((char*)&_src, sizeof(unsigned));
 		fout.write((char*)&_dst, sizeof(unsigned));
+		fout.write((char*)&_temperature, sizeof(double));
 		fout.write((char*)&_weight, sizeof(double));
 	}
 
@@ -78,6 +84,7 @@ private:
 
 	unsigned _src;
 	unsigned _dst;
+	double _temperature;
 	double _weight;
 };
 

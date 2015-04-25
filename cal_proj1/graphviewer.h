@@ -103,6 +103,7 @@ public:
 	 * @param id Identificador único do nó a a remover.
 	 */
 	bool removeNode(int id);
+
 	/**
 	 * Remove uma aresta da representação do grafo.
 	 * @param id Identificador único da aresta a remover.

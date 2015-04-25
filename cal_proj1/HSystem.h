@@ -29,6 +29,7 @@ public:
 	~HSystem();
 
 	void initialize();
+	void initializeWindow();
 	void reset();
 	void loadGraph();
 	void saveGraph() const;
@@ -41,7 +42,7 @@ public:
 
 	void displayRooms() const;
 	void displayConnections() const;
-
+	
 	void disableRoom();
 	void disableRoomGraphViewer(unsigned vertexId);
 	void enableRoom();
@@ -61,7 +62,7 @@ public:
 	void resetFlow();
 	void resetFlowGraphViewer();
 	void addBoiler();
-
+	bool validateGraph() const;
 private:
 
 	int matrixWidth;
@@ -80,6 +81,9 @@ private:
 	map<unsigned, Pipe> pipes;
 	vector<vector<bool> > matrix;
 
+	const double minimumTemperature = 0.0;
+	const double maximumTemperature = 100.0;
+	const double defaultTemperature = 20.0;
 	const double defaultWeight = 70.0;
 
 	const string promptRoomDisable = "Enter the room name to be disabled: ";
@@ -124,10 +128,16 @@ private:
 	void drawFloorplan(int x, int y);
 	bool positionRoom();
 	bool findPosition();
+	bool validateTemperature(double temperature) const;
+	
+	void updateMatrix();
 	void setVertexColor(unsigned vertexId, double roomTemperature) const;
 	void removePosition(int x, int y);
-	void updateMatrix();
+
+	unsigned findHighestTemperature() const;
+	unsigned findLowestTemperature() const;
 	unsigned nextID;
+
 	Vertex<Room>* getRoom(const string &s) const;
 };
 

@@ -118,13 +118,21 @@ __forceinline void hSystem_save()
 		hSystem->saveGraph();
 	}
 }
+__forceinline void hSystem_validateGraph()
+{
+	if (hSystem != nullptr)
+	{
+		hSystem->validateGraph();
+	}
+}
 
 void adminMenu()
 {
 	Menu adminMenu("View House");
 
 	adminMenu.setWidth(40);
-	adminMenu.addItem('1', "xxxx");
+	adminMenu.addItem('1', "Validate graph");
+	adminMenu.addHandler('1', hSystem_validateGraph);
 	adminMenu.addItem('2', "yyyy");
 	adminMenu.addSeparator();
 	adminMenu.addItem('3', "Display rooms");

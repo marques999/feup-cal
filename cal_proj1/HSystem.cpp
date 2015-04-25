@@ -40,12 +40,18 @@ void HSystem::initialize()
 	roomPositionY = 0;
 	matrix = vector<vector<bool> >(matrixHeight, vector<bool>(matrixWidth, false));
 	gv = new GraphViewer(700, 600, false);
+	initializeWindow();
+	addBoiler();
+	nextID = 0;
+}
+
+void HSystem::initializeWindow()
+{
 	gv->setBackground("background.png");
 	gv->createWindow(700, 600);
 	gv->defineVertexColor("blue");
 	gv->defineEdgeColor("black");
-	addBoiler();
-	nextID = 0;
+	gv->rearrange();
 }
 
 void HSystem::reset()
@@ -67,7 +73,7 @@ void HSystem::reset()
 	matrix = vector<vector<bool> >(matrixHeight, vector<bool>(matrixWidth, false));
 	roomPositionX = 0;
 	roomPositionY = 0;
-	nextID = 0;
+	nextID = 0;	
 	addBoiler();
 }
 
@@ -101,7 +107,6 @@ void HSystem::displayConnections() const
 		tableRow[1] = roomName(p.second.source());
 		tableRow[2] = roomName(p.second.dest());
 		tableRow[3] = UI::FormatWeight(p.second.weight(), 1);
-
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
 	}
 
@@ -113,6 +118,9 @@ void HSystem::displayRooms() const
 	const int rowCount = 6;
 	const int tableLength[rowCount] = { 8, 24, 5, 5, 13, 12 };
 
+	Room lowestTemperature = rooms.at(findLowestTemperature());
+	Room highestTemperature = rooms.at(findHighestTemperature());
+	string displayString;
 	vector<string> tableLabel = { " Room", " Name", "  X", "  Y", " Temperature", " Status" };
 
 	UI::DisplayFrame("ROOMS");
@@ -128,10 +136,24 @@ void HSystem::displayRooms() const
 		tableRow[3] = UI::Format(r.second.getY(), 2);
 		tableRow[4] = UI::FormatTemperature(r.second.getTemperature());
 		tableRow[5] = r.second.isEnabled() ? "Enabled" : "Disabled";
-
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
 	}
 
+	cout << endl;
+	displayString += "Lowest: ";
+	displayString += lowestTemperature.getName();
+	displayString += " (";
+	displayString += UI::FormatTemperature(lowestTemperature.getTemperature());
+	displayString += ")";
+	UI::Display(displayString);
+	displayString.clear();
+	displayString += "Highest: ";
+	displayString += highestTemperature.getName();
+	displayString += " (";
+	displayString += UI::FormatTemperature(highestTemperature.getTemperature());
+	displayString += ")";
+	UI::Display(displayString);
+	cout << endl;
 	UI::PauseConsole();
 }
 
@@ -306,7 +328,7 @@ void HSystem::saveGraph(const string &filename) const
 
 void HSystem::addBoiler()
 {
-	Room roomCaldeira("Caldeira", 20.0);
+	Room roomCaldeira("Caldeira", defaultTemperature);
 
 	rooms[0] = roomCaldeira;
 	g.addVertex(roomCaldeira);
@@ -334,19 +356,19 @@ void HSystem::resetFlowGraphViewer()
 
 void HSystem::setVertexColor(unsigned vertexId, double roomTemperature) const
 {
-	if (roomTemperature <= 10.0)
+	if (roomTemperature < 10.0)
 	{
 		gv->setVertexColor(vertexId, "MAGENTA");
 	}
-	else if (roomTemperature <= 15.0)
+	else if (roomTemperature < 15.0)
 	{
 		gv->setVertexColor(vertexId, "BLUE");
 	}
-	else if (roomTemperature <= 20.0)
+	else if (roomTemperature < 20.0)
 	{
 		gv->setVertexColor(vertexId, "CYAN");
 	}
-	else if (roomTemperature <= 25.0)
+	else if (roomTemperature < 25.0)
 	{
 		gv->setVertexColor(vertexId, "YELLOW");
 	}
@@ -372,7 +394,7 @@ void HSystem::updateMatrix()
 }
 
 template <typename T>
-T readValue(const string& prompt, function<bool(T)> validator)
+T readValue(const string& prompt)
 {
 	string input;
 	T val = T();
@@ -393,11 +415,6 @@ T readValue(const string& prompt, function<bool(T)> validator)
 	stringstream ss(input);
 
 	if (!(ss >> val) || ss.rdbuf()->in_avail() != 0)
-	{
-		throw InvalidParameter();
-	}
-
-	if (!validator(val))
 	{
 		throw InvalidParameter();
 	}
@@ -423,12 +440,6 @@ string readString(const string& prompt)
 	}
 
 	return input;
-}
-
-template <typename T>
-T readValue(const string& prompt)
-{
-	return readValue<T>(prompt, [](T) { return true; });
 }
 
 void HSystem::loadGraph()
@@ -543,10 +554,12 @@ void HSystem::addRoom()
 	}
 	else
 	{
-		double roomTemperature = readValue<double>(promptTemperature, [](double t)
+		double roomTemperature = readValue<double>(promptTemperature);
+
+		if (!validateTemperature(roomTemperature))
 		{
-			return (t >= 0.0 && t <= 42.0);
-		});
+			throw InvalidParameter();
+		}
 
 		Room newRoom(roomName, roomTemperature);
 
@@ -633,7 +646,6 @@ void HSystem::disableRoom()
 		{
 			selectedRoom->info.disable();
 			disableRoomGraphViewer(selectedRoom->id);
-			cout << "ROOM STATUS :" << (getRoom(roomName)->info.isEnabled() ? "true" : "false");
 			UI::DisplayMessage(radiatorDisableSuccess);
 		}
 		else
@@ -696,10 +708,12 @@ void HSystem::changeTemperature()
 	}
 	else
 	{
-		double roomTemperature = readValue<double>(promptNewTemperature, [](double t)
+		double roomTemperature = readValue<double>(promptNewTemperature);
+
+		if (!validateTemperature(roomTemperature))
 		{
-			return (t >= 0.0 && t <= 100.0);
-		});
+			throw InvalidParameter();
+		}
 
 		selectedRoom->info.setTemperature(roomTemperature);
 		changeTemperatureGraphViewer(selectedRoom);
@@ -788,6 +802,8 @@ void HSystem::removeConnection()
 		UI::DisplayMessage(roomDisconnectFail);
 	}
 }
+
+
 
 void HSystem::drawFloorplan(int x, int y)
 {
@@ -945,6 +961,26 @@ bool HSystem::positionRoom()
 	return true;
 }
 
+bool HSystem::validateGraph() const
+{
+	vector<Vertex<Room>* > vertices = g.getVertices();
+
+	if (vertices.at(0)->adj.empty())
+	{
+		throw BoilerNoConnections();
+	}
+
+	for (Vertex<Room>* &v : vertices)
+	{
+		if (v->id != 0 && v->indegree == 0)
+		{
+			throw RoomNotConnected(v->info.getName());
+		}
+	}
+
+	return true;
+}
+
 Vertex<Room>* HSystem::getRoom(const string &s) const
 {
 	return g.getVertex(Room(s));
@@ -966,7 +1002,7 @@ void HSystem::addRoomGraphViewer(unsigned vertexId, const Room& room)
 {
 	rooms[vertexId] = room;
 	gv->addNode(vertexId, convertPositionX(room.getX()), convertPositionY(room.getY()));
-	gv->setVertexLabel(vertexId, formatRoom(room));
+ 	gv->setVertexLabel(vertexId, formatRoom(room));
 
 	if (room.isEnabled())
 	{
@@ -1058,4 +1094,43 @@ void HSystem::enableRoomGraphViewer(unsigned vertexId, double temperature)
 		setVertexColor(vertexId, temperature);
 		gv->rearrange();
 	}
+}
+
+bool HSystem::validateTemperature(double temperature) const
+{
+	return (temperature >= minimumTemperature && temperature <= maximumTemperature);
+}
+
+unsigned HSystem::findLowestTemperature() const
+{
+	unsigned roomId = -1;
+	double lowestTemperature = maximumTemperature;
+
+	for (auto &r : rooms)
+	{
+		if (r.second.getTemperature() < lowestTemperature)
+		{
+			lowestTemperature = r.second.getTemperature();
+			roomId = r.first;
+		}
+	}
+
+	return roomId;
+}
+
+unsigned HSystem::findHighestTemperature() const
+{
+	unsigned roomId = -1;
+	double highestTemperature = minimumTemperature;
+
+	for (auto &r : rooms)
+	{
+		if (r.second.getTemperature() > highestTemperature)
+		{
+			highestTemperature = r.second.getTemperature();
+			roomId = r.first;
+		}
+	}
+
+	return roomId;
 }
