@@ -1,14 +1,14 @@
 /*!
-* \file Graph.h
-*
-* FEUP_CAL1415_2MIEIC02_D
-* \author Diogo Marques
-* \author Jose Taveira
-* \author Vitor Esteves
-*
-* \date Abril 2015
-*
-*/
+ * \file Graph.h
+ *
+ * FEUP_CAL1415_2MIEIC02_D
+ * \author Diogo Marques
+ * \author Jose Taveira
+ * \author Vitor Esteves
+ *
+ * \date Abril 2015
+ *
+ */
 
 #ifndef GRAPH_H_
 #define GRAPH_H_

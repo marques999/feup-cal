@@ -33,7 +33,7 @@
 
 using namespace std;
 
-class CustomException 
+class CustomException
 {
 public:
 
@@ -43,7 +43,7 @@ public:
 	}
 
 	virtual string str() const = 0;
-	
+
 protected:
 
 	string args;
@@ -138,7 +138,7 @@ public:
 	{
 	}
 
-	string str() const 
+	string str() const
 	{
 		return "ERROR: file I/O exception occured while trying to access " + args + ".";
 	}

@@ -30,11 +30,16 @@ public:
 
 	void initialize();
 	void initializeWindow();
+
 	void reset();
+	void resetFlow();
+	void resetFlowGraphViewer();
+
 	void loadGraph();
 	void saveGraph() const;
 	bool loadGraph(const string &filename);
 	void saveGraph(const string &filename) const;
+
 	void readEdge(ifstream &fin);
 	void readVertex(ifstream &fin);
 	void writeEdge(unsigned edgeId, ofstream &fout) const;
@@ -47,33 +52,31 @@ public:
 	void disableRoomGraphViewer(unsigned vertexId);
 	void enableRoom();
 	void enableRoomGraphViewer(unsigned vertexId, double temperature);
-	void addConnection();
-	void addConnectionGraphViewer(const Pipe& pipe);
+
 	void addRoom();
 	void addRoomGraphViewer(unsigned vertexId, const Room& room);
 	void removeRoom();
 	void removeRoomGraphViewer(unsigned vertexId);
+
+	void addConnection();
+	void addConnectionGraphViewer(const Pipe& pipe);
+	void removeConnection();
+	void removeConnectionGraphViewer(unsigned src, unsigned dst);
+
 	void changeTemperature();
 	void changeTemperatureGraphViewer(Vertex<Room>* &room);
 	void changeWeight(); // is it needed?
 	void changeWeightGraphViewer(unsigned edgeId, unsigned weight);
-	void removeConnection();
-	void removeConnectionGraphViewer(unsigned src, unsigned dst);
-	void resetFlow();
-	void resetFlowGraphViewer();
-	void addBoiler();
+
 	bool validateGraph() const;
+	bool validateTemperature(double temperature) const;
+
 private:
 
 	int matrixWidth;
 	int matrixHeight;
 	int roomPositionX;
 	int roomPositionY;
-
-	double calculateTemperature(const Room &room, const Edge<Room> &pipe, double t, double q)
-	{
-		return (room.getTemperature() * pipe.weight + t*q) / (pipe.weight + q);
-	}
 
 	GraphViewer *gv;
 	Graph<Room> g;
@@ -119,17 +122,16 @@ private:
 	const string unknownError = "ERROR: what have you done???";
 	const string resetWeightSuccess = "INFORMATION: weights reset successfully!";
 
-	char* formatRoom(const Room &r) const;
-
 	string roomName(unsigned id) const;
 
+	double calculateTemperature(const Room &room, const Edge<Room> &pipe, double t, double q) const;
 	unsigned convertPositionX(int x);
 	unsigned convertPositionY(int y);
 	void drawFloorplan(int x, int y);
+	char* formatRoom(const Room &r) const;
 	bool positionRoom();
 	bool findPosition();
-	bool validateTemperature(double temperature) const;
-	
+	void addBoiler();
 	void updateMatrix();
 	void setVertexColor(unsigned vertexId, double roomTemperature) const;
 	void removePosition(int x, int y);

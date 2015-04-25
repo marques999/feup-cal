@@ -73,7 +73,7 @@ void HSystem::reset()
 	matrix = vector<vector<bool> >(matrixHeight, vector<bool>(matrixWidth, false));
 	roomPositionX = 0;
 	roomPositionY = 0;
-	nextID = 0;	
+	nextID = 0;
 	addBoiler();
 }
 
@@ -803,8 +803,6 @@ void HSystem::removeConnection()
 	}
 }
 
-
-
 void HSystem::drawFloorplan(int x, int y)
 {
 	UI::ClearConsole();
@@ -1002,7 +1000,7 @@ void HSystem::addRoomGraphViewer(unsigned vertexId, const Room& room)
 {
 	rooms[vertexId] = room;
 	gv->addNode(vertexId, convertPositionX(room.getX()), convertPositionY(room.getY()));
- 	gv->setVertexLabel(vertexId, formatRoom(room));
+	gv->setVertexLabel(vertexId, formatRoom(room));
 
 	if (room.isEnabled())
 	{
@@ -1099,6 +1097,11 @@ void HSystem::enableRoomGraphViewer(unsigned vertexId, double temperature)
 bool HSystem::validateTemperature(double temperature) const
 {
 	return (temperature >= minimumTemperature && temperature <= maximumTemperature);
+}
+
+double HSystem::calculateTemperature(const Room &room, const Edge<Room> &pipe, double t, double q) const
+{
+	return (room.getTemperature() * pipe.weight + t * q) / (pipe.weight + q);
 }
 
 unsigned HSystem::findLowestTemperature() const
