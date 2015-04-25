@@ -33,72 +33,114 @@
 
 using namespace std;
 
-class SourceRoomNotFound
+class CustomException 
 {
 public:
 
-	SourceRoomNotFound(const string &s)
+	CustomException(const string &s)
 	{
-		this->sourceRoom = s;
+		this->args = s;
 	}
 
-	string str()
-	{
-		return "ERROR: source room " + sourceRoom + " not found.";
-	}
+	virtual string str() const = 0;
+	
+protected:
 
-private:
-
-	string sourceRoom;
+	string args;
 };
 
-class DestinationRoomNotFound
+class MessageException
 {
 public:
 
-	DestinationRoomNotFound(const string &s)
+	MessageException()
 	{
-		this->destinationRoom = s;
 	}
 
-	string str()
-	{
-		return "ERROR: destination room " + destinationRoom + " not found.";
-	}
-
-private:
-
-	string destinationRoom;
+	virtual string str() const = 0;
 };
 
-class InvalidParameter
+class SourceRoomNotFound : public CustomException
 {
 public:
 
-	InvalidParameter()
+	SourceRoomNotFound(const string &s) : CustomException(s)
 	{
 	}
 
-	string str()
+	string str() const
+	{
+		return "ERROR: source room " + args + " not found.";
+	}
+};
+
+class DestinationRoomNotFound : public CustomException
+{
+public:
+
+	DestinationRoomNotFound(const string &s) : CustomException(s)
+	{
+	}
+
+	string str() const
+	{
+		return "ERROR: destination room " + args + " not found.";
+	}
+};
+
+class BoilerNoConnections : public MessageException
+{
+public:
+
+	BoilerNoConnections() : MessageException()
+	{
+	}
+
+	string str() const
+	{
+		return "ERROR: boiler must be connected to at least one room.";
+	}
+};
+
+class RoomNotConnected : public CustomException
+{
+public:
+
+	RoomNotConnected(const string &s) : CustomException(s)
+	{
+	}
+
+	string str() const
+	{
+		return "ERROR: " + args + " is not connected to any source (boiler or room).";
+	}
+};
+
+class InvalidParameter : public MessageException
+{
+public:
+
+	InvalidParameter() : MessageException()
+	{
+	}
+
+	string str() const
 	{
 		return "ERROR: you have entered an invalid value.";
 	}
 };
 
-class FileIOException
+class FileIOException : public CustomException
 {
-	string fileName;
-
 public:
 
-	FileIOException(const string &s)
+	FileIOException(const string &s) : CustomException(s)
 	{
-		fileName = s;
 	}
 
-	string str()
+	string str() const 
 	{
-		return "ERROR: file I/O exception occured while trying to access " + fileName + ".";
+		return "ERROR: file I/O exception occured while trying to access " + args + ".";
 	}
 };
 

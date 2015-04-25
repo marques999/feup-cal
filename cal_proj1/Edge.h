@@ -25,6 +25,7 @@ struct Edge
 
 	Vertex<T> *dest;
 
+	double temperature;
 	double weight;
 };
 
