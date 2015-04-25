@@ -39,18 +39,22 @@ class Graph
 
 protected:
 
-	unsigned nextID = 0;
+	unsigned nextEdgeId = 0;
+	unsigned nextVertexId = 0;
 
 public:
 
 	int addVertex(const T &in);
 	bool addVertex(unsigned vertexId, const T &in);
-	bool addEdge(const T &sourc, const T &dest, double w);
+	int addEdge(const T &sourc, const T &dest, double w);
+	bool addEdge(unsigned edgeId, const T &sourc, const T &dest, double w);
 	int removeVertex(const T &in);
 	bool removeEdge(const T &sourc, const T &dest);
 
 	vector<T> dfs() const;
 	vector<T> bfs(Vertex<T> *v) const;
+	
+	bool bfs(Vertex<T>* dst, vector<Vertex<T>* > &path) const;
 
 	int maxNewChildren(Vertex<T> *v, T &inf) const;
 	vector<Vertex<T> * > getVertices() const;
@@ -105,7 +109,7 @@ int Graph<T>::addVertex(const T &in)
 
 	Vertex<T>* newVertex = new Vertex<T>(in);
 
-	newVertex->id = nextID++;
+	newVertex->id = nextVertexId++;
 	vertices.push_back(newVertex);
 
 	return newVertex->id;
@@ -124,7 +128,7 @@ bool Graph<T>::addVertex(unsigned vertexId, const T &in)
 
 	Vertex<T>* newVertex = new Vertex<T>(vertexId, in);
 
-	nextID = vertexId + 1;
+	nextVertexId = vertexId + 1;
 	vertices.push_back(newVertex);
 
 	return true;
@@ -172,7 +176,20 @@ int Graph<T>::removeVertex(const T &in)
 }
 
 template <class T>
-bool Graph<T>::addEdge(const T &src, const T &dst, double w)
+int Graph<T>::addEdge(const T &src, const T &dst, double w)
+{
+	int edgeId = nextEdgeId;
+
+	if (!addEdge(edgeId, src, dst, w))
+	{
+		return -1;
+	}
+
+	return edgeId;
+}
+
+template <class T>
+bool Graph<T>::addEdge(unsigned edgeId, const T &src, const T &dst, double w)
 {
 	typename vector<Vertex<T>*>::iterator it = vertices.begin();
 	typename vector<Vertex<T>*>::iterator ite = vertices.end();
@@ -205,7 +222,8 @@ bool Graph<T>::addEdge(const T &src, const T &dst, double w)
 	}
 
 	vD->indegree++;
-	vS->addEdge(vD, w);
+	vS->addEdge(edgeId, vD, w);
+	nextEdgeId = edgeId + 1;
 
 	return true;
 }
@@ -309,6 +327,36 @@ vector<T> Graph<T>::bfs(Vertex<T> *v) const
 	}
 
 	return res;
+}
+
+template <class T>
+bool Graph<T>::bfs(Vertex<T> *dst, vector<Vertex<T> *> &path) const
+{
+	queue<Vertex<T> *> q;
+
+	path.clear();
+	q.push(dst);
+	dst->visited = true;
+
+	while (!q.empty())
+	{
+		Vertex<T> *v1 = q.front();
+
+		q.pop();
+		path.push_back(v1);
+
+		for (const Edge<T> &e : v1->adj)
+		{
+			if (e.dest->visited == false && e.weight > 0)
+			{
+				e.dest->path = v1;
+				e.dest->visited = true;
+				q.push(e.dest);
+			}
+		}
+	}
+
+	return dst->visited;
 }
 
 template <class T>

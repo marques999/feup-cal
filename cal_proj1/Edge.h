@@ -19,12 +19,17 @@ struct Vertex;
 template <class T>
 struct Edge
 {
-	Edge(Vertex<T> *d, double w) : dest(d), weight(w)
+	Edge(Vertex<T> *d, double w) : dest(d), weight(w), id(0)
+	{
+	}
+
+	Edge(unsigned n, Vertex<T> *d, double w) : dest(d), weight(w), id(n)
 	{
 	}
 
 	Vertex<T> *dest;
 
+	unsigned id;
 	double temperature;
 	double weight;
 };

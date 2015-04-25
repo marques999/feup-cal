@@ -20,7 +20,6 @@
 
 HSystem::HSystem()
 {
-	nextID = 0;
 	initialize();
 }
 
@@ -42,7 +41,6 @@ void HSystem::initialize()
 	gv = new GraphViewer(700, 600, false);
 	initializeWindow();
 	addBoiler();
-	nextID = 0;
 }
 
 void HSystem::initializeWindow()
@@ -73,7 +71,6 @@ void HSystem::reset()
 	matrix = vector<vector<bool> >(matrixHeight, vector<bool>(matrixWidth, false));
 	roomPositionX = 0;
 	roomPositionY = 0;
-	nextID = 0;
 	addBoiler();
 }
 
@@ -178,8 +175,8 @@ void HSystem::readEdge(ifstream &fin)
 		return;
 	}
 
-	g.addEdge(srcRoom->second, dstRoom->second, newPipe.weight());
-	addConnectionGraphViewer(newPipe);
+	g.addEdge(edgeId, srcRoom->second, dstRoom->second, newPipe.weight());
+	addConnectionGraphViewer(edgeId, newPipe);
 }
 
 void HSystem::readVertex(ifstream &fin)
@@ -440,6 +437,34 @@ string readString(const string& prompt)
 	}
 
 	return input;
+}
+
+void HSystem::increaseFlow(unsigned vertexId)
+{
+	Vertex<Room>* srcRoom = g.getVertex(rooms.at(0));
+	Vertex<Room>* u;
+	Vertex<Room>* v;
+	Vertex<Room>* dstRoom = g.getVertex(rooms.at(vertexId));
+	vector<Vertex<Room>* > roomPath;
+
+	while (g.bfs(dstRoom, roomPath))
+	{
+		for (Vertex<Room>* v = dstRoom; v != srcRoom; v = v->path)
+		{
+		//	u = v->path;
+
+			for (auto& e : pipes)
+			{
+				if (e.second.source() == u->id && e.second.dest() == v->id)
+				{
+				//	double newTemperature = calculateTemperature(u->info, e.second, 20, 5);
+				//	rooms.at(u->id).setTemperature(newTemperature);
+				}
+			}
+			
+
+		}
+	}
 }
 
 void HSystem::loadGraph()
@@ -754,7 +779,9 @@ void HSystem::addConnection()
 	}
 	else
 	{
-		if (g.addEdge(srcRoom->info, dstRoom->info, defaultWeight))
+		int edgeId = g.addEdge(srcRoom->info, dstRoom->info, defaultWeight);
+
+		if (edgeId != -1)
 		{
 			if (!g.isDAG())
 			{
@@ -763,7 +790,7 @@ void HSystem::addConnection()
 			}
 			else
 			{
-				addConnectionGraphViewer(Pipe(srcRoom->id, dstRoom->id, defaultWeight));
+				addConnectionGraphViewer(edgeId, Pipe(srcRoom->id, dstRoom->id, defaultWeight));
 				UI::DisplayMessage(roomConnectSuccess);
 			}
 		}
@@ -984,15 +1011,14 @@ Vertex<Room>* HSystem::getRoom(const string &s) const
 	return g.getVertex(Room(s));
 }
 
-void HSystem::addConnectionGraphViewer(const Pipe &pipe)
+void HSystem::addConnectionGraphViewer(unsigned edgeId, const Pipe &pipe)
 {
 	if (rooms.find(pipe.source()) != rooms.end() && rooms.find(pipe.dest()) != rooms.end())
 	{
-		pipes[nextID] = pipe;
-		gv->addEdge(nextID, pipe.source(), pipe.dest(), EdgeType::DIRECTED);
-		gv->setEdgeLabel(nextID, UI::FormatWeight(pipe.weight(), 1));
+		pipes[edgeId] = pipe;
+		gv->addEdge(edgeId, pipe.source(), pipe.dest(), EdgeType::DIRECTED);
+		gv->setEdgeLabel(edgeId, UI::FormatWeight(pipe.weight(), 1));
 		gv->rearrange();
-		nextID++;
 	}
 }
 
@@ -1099,9 +1125,9 @@ bool HSystem::validateTemperature(double temperature) const
 	return (temperature >= minimumTemperature && temperature <= maximumTemperature);
 }
 
-double HSystem::calculateTemperature(const Room &room, const Edge<Room> &pipe, double t, double q) const
+double HSystem::calculateTemperature(const Room &room, const Pipe &pipe, double t, double q) const
 {
-	return (room.getTemperature() * pipe.weight + t * q) / (pipe.weight + q);
+	return (room.getTemperature() * pipe.weight() + t * q) / (pipe.weight() + q);
 }
 
 unsigned HSystem::findLowestTemperature() const

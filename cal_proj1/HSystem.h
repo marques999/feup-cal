@@ -59,7 +59,7 @@ public:
 	void removeRoomGraphViewer(unsigned vertexId);
 
 	void addConnection();
-	void addConnectionGraphViewer(const Pipe& pipe);
+	void addConnectionGraphViewer(unsigned edgeId, const Pipe& pipe);
 	void removeConnection();
 	void removeConnectionGraphViewer(unsigned src, unsigned dst);
 
@@ -124,7 +124,8 @@ private:
 
 	string roomName(unsigned id) const;
 
-	double calculateTemperature(const Room &room, const Edge<Room> &pipe, double t, double q) const;
+	void increaseFlow(unsigned vertexId);
+	double calculateTemperature(const Room &room, const Pipe &pipe, double t, double q) const;
 	unsigned convertPositionX(int x);
 	unsigned convertPositionY(int y);
 	void drawFloorplan(int x, int y);
@@ -138,7 +139,6 @@ private:
 
 	unsigned findHighestTemperature() const;
 	unsigned findLowestTemperature() const;
-	unsigned nextID;
 
 	Vertex<Room>* getRoom(const string &s) const;
 };
