@@ -130,8 +130,7 @@ __forceinline void hSystem_regulate()
 {
 	if (hSystem != nullptr)
 	{
-		cout << hSystem->calculateRoomTemperature(19.0, 10.0, 25.0, 8.0) << endl;
-		UI::PauseConsole();
+		hSystem->findBestMenu();
 	}
 }
 

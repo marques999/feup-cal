@@ -58,7 +58,7 @@ public:
 	int maxNewChildren(Vertex<T> *v, T &inf) const;
 	vector<Vertex<T> * > getVertices() const;
 	int getNumVertex() const;
-
+	void resetDists() const;
 	Vertex<T>* getVertex(const T &v) const;
 	void resetIndegrees();
 	void resetWeights(double weight);
@@ -66,7 +66,6 @@ public:
 	int getNumCycles();
 	bool isDAG();
 	vector<T> topologicalOrder();
-	map<unsigned, T> Graph<T>::dijkstra(Vertex<T>* &dst);
 };
 
 template <class T>
@@ -79,6 +78,16 @@ template <class T>
 vector<Vertex<T>* > Graph<T>::getVertices() const
 {
 	return vertices;
+}
+
+template <class T>
+void Graph<T>::resetDists() const
+{
+	for (Vertex<T>* v : vertices)
+	{
+		v->path = nullptr;
+		v->dist = numeric_limits<double>::max();
+	}
 }
 
 template <class T>
@@ -508,98 +517,5 @@ vector<T> Graph<T>::topologicalOrder()
 
 	return res;
 }
-
-template<class T>
-map<unsigned, T> Graph<T>::dijkstra(Vertex<T>* &dst) ////////
-{
-	map<unsigned, T> res;
-	queue<Vertex<T>* > q;
-
-	if (!isDAG())
-	{
-		return res;
-	}
-
-	resetIndegrees();
-
-	if (vertices.empty())
-	{
-		return res;
-	}
-	
-	q.push(vertices[0]);
-
-	while (!q.empty())
-	{
-		Vertex<T>* v = q.front();
-
-		q.pop();
-		res.push_back(v->info);
-
-		for (const Edge<T> &e : v->adj)
-		{
-			Vertex<T>* w = e.dest;
-
-			e.dest->indegree--;
-
-			if (w->indegree == 0)
-			{
-				if (v->dist + e.weight < w->dist)
-				{
-					w->dist = v->dist + e.weight;
-					w->path = v;
-					q.push(w);
-				}			
-			}
-		}
-	}
-
-	if (res.size() != vertices.size())
-	{
-		while (!res.empty())
-		{
-			res.pop_back();
-		}
-	}
-
-	resetIndegrees();
-
-	return res;
-}
-
-template<class T>
-void Graph<T>::unweightedShortestPath(const T &src)
-{
-	for (Vertex<T>* v : vertices)
-	{
-		v->path = nullptr;
-		v->dist = INT_MAX;
-	}
-
-	Vertex<T>* v = getVertex(src);
-
-	v->dist = 0;
-
-	queue<Vertex<T>* > q;
-
-	q.push(v);
-
-	while (!q.empty())
-	{
-		v = q.front();
-		q.pop();
-
-		for (const Edge<T> &e : v->adj)
-		{
-			if (e.dest->dist == INT_MAX)
-			{
-				e.dest->dist = v->dist + 1;
-				e.dest->path = v;
-				q.push(e.dest);
-			}
-		}
-	}
-}
-
 
 #endif /* __GRAPH_H_ */

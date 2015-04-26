@@ -73,6 +73,7 @@ public:
 	double calculateWaterTemperature(double TempAntes, double QAntes, double NovaTemp, double QAdicional) const;
 	bool validateGraph() const;
 	bool validateTemperature(double temperature) const;
+	map<unsigned, double> dijkstra(Vertex<Room>* &dst, double tempAdicional, double QAdicional);
 
 private:
 

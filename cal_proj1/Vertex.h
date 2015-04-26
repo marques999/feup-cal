@@ -38,7 +38,7 @@ struct Vertex
 	bool processing;
 	unsigned id;
 	int indegree;
-	int dist;
+	double dist;
 
 	void addEdge(unsigned edgeId, Vertex<T> *dst, double w);
 	bool removeEdgeTo(Vertex<T> *dst);

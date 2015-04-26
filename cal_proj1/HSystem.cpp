@@ -89,7 +89,7 @@ unsigned HSystem::convertPositionY(int y)
 void HSystem::displayConnections() const
 {
 	const int rowCount = 5;
-	const int tableLength[rowCount] = { 8, 20, 20, 10, 13};
+	const int tableLength[rowCount] = { 8, 20, 20, 10, 13 };
 
 	vector<string> tableLabel = { " ID", " From", " To", " Quantity", " Temperature" };
 
@@ -463,7 +463,7 @@ void HSystem::findBest(unsigned vertexId, double targetTemperature)
 
 	for (double weight : weights)
 	{
-	
+
 		// executar algoritmo de dijkstra modificado
 	}
 }
@@ -481,12 +481,23 @@ void HSystem::findBestMenu()
 		throw TargetRoomNotFound(targetName);
 	}
 
-	double targetTemperature = readValue<double>(promptTargetTemperature);
+	if (targetRoom->id == 0)
+	{
+		throw BoilerNoConnections();
+	}
 
-	if (!validateTemperature(targetTemperature))
+	double novaTemp = readValue<double>(promptTargetTemperature);
+
+	if (!validateTemperature(novaTemp))
 	{
 		throw InvalidParameter();
 	}
+
+	double tempAntes = targetRoom->info.getTemperature();
+	double QAntes = 70.0;
+	double tempAdicional = calculateWaterTemperature(tempAntes, QAntes, novaTemp, 15);
+	cout << "Temperatura adicional: " << tempAdicional << endl;
+	dijkstra(targetRoom, tempAdicional, 15);
 
 	//findBest(targetRoom->id, targetTemperature);
 	//updateGraphViewer();
@@ -1201,7 +1212,92 @@ double HSystem::calculateRoomTemperature(double TempAntes, double QAntes, double
 
 double HSystem::calculateWaterTemperature(double TempAntes, double QAntes, double NovaTemp, double QAdicional) const
 {
-	return (QAntes * TempAntes - NovaTemp * QAntes - NovaTemp * QAdicional) / QAdicional;
+	return (QAntes * TempAntes - NovaTemp * QAntes - NovaTemp * QAdicional) / -QAdicional;
+}
+
+map<unsigned, double> HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional, double QAdicional) ////////
+{
+	map<unsigned, double> res;
+	queue<Vertex<Room>* > q;
+
+	if (!g.isDAG())
+	{
+		return res;
+	}
+
+	g.resetIndegrees();
+	g.resetDists();
+
+	if (g.getVertices().empty())
+	{
+		return res;
+	}
+	
+	Vertex<Room>* boilerRoom = g.getVertex(rooms.at(0));
+
+	boilerRoom->dist = 100.0,
+	q.push(boilerRoom);
+	
+
+	while (!q.empty())
+	{
+		Vertex<Room>* v = q.front();
+
+		q.pop();
+
+		cout << "Visitou vertice " << v->id << endl;
+#undef max
+	
+		for (const Edge<Room> &e : v->adj)
+		{
+			Vertex<Room>* w = e.dest;
+
+			e.dest->indegree--;
+
+			double tempAntes = w->info.getTemperature();
+			double QAntes = e.weight;
+			double novaTemp = calculateRoomTemperature(tempAntes, QAntes, tempAdicional, QAdicional);
+			
+			cout << "Nova temepratura para o vertice " << w->id << ": " << novaTemp << endl;
+			
+			if (abs(tempAntes - novaTemp) < w->dist)
+			{
+				cout << "nova variacao minima ! " << abs(tempAntes - novaTemp) << endl;
+				w->dist = abs(tempAntes - novaTemp);
+				res[w->id] = novaTemp;
+				w->path = v;
+			}
+
+			if (w->indegree == 0)
+			{
+				q.push(w);
+			}
+		}
+
+
+	}
+
+/*	if (res.size() != g.getVertices.size())
+	{
+		while (!res.empty())
+		{
+			res.pop_back();
+		}
+	}
+	*/
+	
+	cout << "Melhor caminho: ";
+
+	for (Vertex<Room>* i = dst; i != boilerRoom; i = i->path)
+	{
+		i->info.setTemperature(res.at(i->id));
+		changeTemperatureGraphViewer(i);
+		cout << i->info.getName() << ", ";
+	}
+
+	g.resetIndegrees();
+
+	return res;
 }
 
 unsigned HSystem::findLowestTemperature() const
