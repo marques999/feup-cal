@@ -146,6 +146,20 @@ public:
 	}
 };
 
+class NoSolutionFound : public MessageException
+{
+public:
+
+	NoSolutionFound() : MessageException()
+	{
+	}
+
+	string str() const
+	{
+		return "ERROR: can't auto adjust room temperature - no solution found.";
+	}
+};
+
 class FileIOException : public CustomException
 {
 public:

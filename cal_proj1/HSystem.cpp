@@ -336,6 +336,8 @@ void HSystem::addBoiler()
 	gv->rearrange();
 }
 
+static const string validationSuccessful = "INFORMATION: Graph validated successfully, you can now run auto-adjustement.";
+
 void HSystem::resetFlow()
 {
 	vector<Vertex<Room>* > vertices = g.getVertices();
@@ -343,7 +345,14 @@ void HSystem::resetFlow()
 	for (auto &v : vertices)
 	{
 		v->info.setCaudal(defaultWeight);
-		cout << "caudal: " << v->info.getCaudal() << endl;
+
+		if (!v->info.isEnabled())
+		{
+			v->info.enable();
+			enableRoomGraphViewer(v->id, v->info.getTemperature());
+		}
+
+		changeTemperatureGraphViewer(v);
 	}
 
 	resetFlowGraphViewer();
@@ -466,10 +475,15 @@ void HSystem::findBest(unsigned vertexId, double novaTemp)
 	Vertex<Room>* targetRoom = g.getVertex(rooms.at(vertexId));
 	Vertex<Room>* boilerRoom = g.getVertex(rooms.at(0));
 
+	if (!validateGraph())
+	{
+		return;
+	}
+
 	double TempAntes = targetRoom->info.getTemperature();
 	double QAntes = targetRoom->info.getCaudal();
 	double worstTemperature = 0.0;
-	double oldWorstTemperature = 0.0;
+	double oldWorstTemperature = 100.0;
 	double boilerTemperature = rooms.at(0).getTemperature();
 	double bestWeight = currentWeight;
 
@@ -480,11 +494,10 @@ void HSystem::findBest(unsigned vertexId, double novaTemp)
 	{
 		double TempAdicional = calculateWaterTemperature(TempAntes, QAntes, novaTemp, currentWeight);
 
-		oldWorstTemperature = worstTemperature;
 		worstTemperature = 0.0;
 		currentPath = dijkstra(targetRoom, TempAdicional, currentWeight, worstTemperature);
 		
-		if (currentPath.empty())
+		if (currentPath.size() <= 1)
 		{
 			break;
 		}
@@ -495,11 +508,18 @@ void HSystem::findBest(unsigned vertexId, double novaTemp)
 			boilerTemperature = TempAdicional;
 			bestWeight = currentWeight;
 		}
-		
+
+		oldWorstTemperature = worstTemperature;
 		currentWeight += 5.0;
 	}
 
+	if (bestPath.size() <= 1)
+	{
+		throw NoSolutionFound();
+	}
+
 	boilerRoom->info.setTemperature(boilerTemperature);
+	changeTemperatureGraphViewer(boilerRoom);
 
 	if (bestPath.top().first == 0)
 	{
@@ -536,7 +556,7 @@ void HSystem::findBestMenu()
 	string roomName = readString(promptTargetRoom);
 	Vertex<Room>* targetRoom = getRoom(roomName);
 
-	if (roomName == "")
+	if (roomName.empty())
 	{
 		throw InvalidParameter();
 	}
@@ -559,22 +579,7 @@ void HSystem::findBestMenu()
 			throw InvalidParameter();
 		}
 
-		double tempAntes = targetRoom->info.getTemperature();
-		double QAntes = targetRoom->info.getCaudal();
-		double tempAdicional = calculateWaterTemperature(tempAntes, QAntes, novaTemp, 15);
-		double delta = 0.0;
-
-		cout << "Temperatura adicional: " << tempAdicional << endl;
-		dijkstra(targetRoom, tempAdicional, 15, delta);
-		UI::PauseConsole();
-		delta = 0.0;
-		dijkstra(targetRoom, tempAdicional, 10, delta);
-		UI::PauseConsole();
-		delta = 0.0;
-		dijkstra(targetRoom, tempAdicional, 5, delta);
-		//findBest(targetRoom->id, targetTemperature);
-
-		UI::PauseConsole();
+		findBest(targetRoom->id, novaTemp);
 	}
 }
 
@@ -696,7 +701,7 @@ void HSystem::addRoom()
 {
 	string roomName = readString(promptSourceName); // trim!
 
-	if (roomName == "")
+	if (roomName.empty())
 	{
 		throw InvalidParameter();
 	}
@@ -747,10 +752,11 @@ void HSystem::removeRoom()
 {
 	string roomName = readString(promptRoomName);
 
-	if (roomName == "")
+	if (roomName.empty())
 	{
 		throw InvalidParameter();
 	}
+
 	if (getRoom(roomName) == nullptr)
 	{
 		throw SourceRoomNotFound(roomName);
@@ -788,7 +794,7 @@ void HSystem::disableRoom()
 	string roomName = readString(promptRoomDisable);
 	Vertex<Room>* selectedRoom = getRoom(roomName);
 
-	if (roomName == "")
+	if (roomName.empty())
 	{
 		throw InvalidParameter();
 	}
@@ -822,7 +828,7 @@ void HSystem::enableRoom()
 	string roomName = readString(promptRoomEnable);
 	Vertex<Room>* selectedRoom = getRoom(roomName);
 
-	if (roomName == "")
+	if (roomName.empty())
 	{
 		throw InvalidParameter();
 	}
@@ -854,7 +860,7 @@ void HSystem::enableRoom()
 char* HSystem::formatRoom(const Room &r) const
 {
 	char* buffer = new char[r.getName().length() + 32];
-	sprintf(buffer, "%s (%.1fC, %.1f%)", r.getName().c_str(), r.getTemperature(), r.getCaudal());
+	sprintf(buffer, "%s (%.1fC, %.1f%%)", r.getName().c_str(), r.getTemperature(), r.getCaudal());
 	return buffer;
 }
 
@@ -863,7 +869,7 @@ void HSystem::changeTemperature()
 	string roomName = readString(promptRoomName);
 	Vertex<Room>* selectedRoom = getRoom(roomName);
 
-	if (roomName == "")
+	if (roomName.empty())
 	{
 		throw InvalidParameter();
 	}
@@ -1172,6 +1178,14 @@ bool HSystem::validateGraph() const
 	return true;
 }
 
+void HSystem::validateGraphMenu() const
+{
+	if (validateGraph())
+	{
+		UI::DisplayMessage(validationSuccessful);
+	}
+}
+
 Vertex<Room>* HSystem::getRoom(const string &s) const
 {
 	return g.getVertex(Room(s));
@@ -1212,15 +1226,22 @@ void HSystem::changeTemperatureGraphViewer(Vertex<Room>* &room)
 		rooms[room->id].setTemperature(room->info.getTemperature());
 		gv->setVertexLabel(room->id, formatRoom(room->info));
 
-		if (room->info.isEnabled())
-		{
-			setVertexColor(room->id, room->info.getTemperature());
-		}
-		else
+		if (room->id == 0)
 		{
 			gv->setVertexColor(room->id, "DARK_GRAY");
 		}
-
+		else
+		{
+			if (room->info.isEnabled())
+			{
+				setVertexColor(room->id, room->info.getTemperature());
+			}
+			else
+			{
+				gv->setVertexColor(room->id, "DARK_GRAY");
+			}
+		}
+	
 		gv->rearrange();
 	}
 }
@@ -1358,7 +1379,7 @@ stack<pair<unsigned, double> > HSystem::dijkstra(Vertex<Room>* &dst, double temp
 
 			if (QAntes + QAdicional <= 100.0 && deltaTemperatura < w->dist)
 			{
-				cout << "Room " << w->id << " Delta : " << deltaTemperatura << endl;
+				cout << "Room " << w->id << " Caudal : " << QAntes + QAdicional << endl;
 				temperatures[w->id] = novaTemp;
 			//	w->info.setCaudal(QAntes + QAdicional);
 				w->dist = deltaTemperatura;
@@ -1388,9 +1409,9 @@ stack<pair<unsigned, double> > HSystem::dijkstra(Vertex<Room>* &dst, double temp
 
 		res.push(make_pair(v->id, newTemperature));
 	}
-
+	
 	cout << "Worst Delta : " << worstTemperature << endl;
-
+	cout << "Stack size:" << res.size() << endl;
 	return res;
 }
 

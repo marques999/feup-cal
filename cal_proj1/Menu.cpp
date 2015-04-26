@@ -15,7 +15,7 @@
 
 HSystem* hSystem = nullptr;
 
-__forceinline void hSystem_addRoom()
+inline void hSystem_addRoom()
 {
 	if (hSystem != nullptr)
 	{
@@ -23,7 +23,7 @@ __forceinline void hSystem_addRoom()
 	}
 }
 
-__forceinline void hSystem_addConnection()
+inline void hSystem_addConnection()
 {
 	if (hSystem != nullptr)
 	{
@@ -31,7 +31,7 @@ __forceinline void hSystem_addConnection()
 	}
 }
 
-__forceinline void hSystem_removeRoom()
+inline void hSystem_removeRoom()
 {
 	if (hSystem != nullptr)
 	{
@@ -39,7 +39,7 @@ __forceinline void hSystem_removeRoom()
 	}
 }
 
-__forceinline void hSystem_removeConnection()
+inline void hSystem_removeConnection()
 {
 	if (hSystem != nullptr)
 	{
@@ -47,7 +47,7 @@ __forceinline void hSystem_removeConnection()
 	}
 }
 
-__forceinline void hSystem_enableRadiator()
+inline void hSystem_enableRadiator()
 {
 	if (hSystem != nullptr)
 	{
@@ -55,7 +55,7 @@ __forceinline void hSystem_enableRadiator()
 	}
 }
 
-__forceinline void hSystem_disableRadiator()
+inline void hSystem_disableRadiator()
 {
 	if (hSystem != nullptr)
 	{
@@ -63,7 +63,7 @@ __forceinline void hSystem_disableRadiator()
 	}
 }
 
-__forceinline void hSystem_changeTemperature()
+inline void hSystem_changeTemperature()
 {
 	if (hSystem != nullptr)
 	{
@@ -71,7 +71,7 @@ __forceinline void hSystem_changeTemperature()
 	}
 }
 
-__forceinline void hSystem_resetFlow()
+inline void hSystem_resetFlow()
 {
 	if (hSystem != nullptr)
 	{
@@ -79,7 +79,7 @@ __forceinline void hSystem_resetFlow()
 	}
 }
 
-__forceinline void hSystem_displayRooms()
+inline void hSystem_displayRooms()
 {
 	if (hSystem != nullptr)
 	{
@@ -87,7 +87,7 @@ __forceinline void hSystem_displayRooms()
 	}
 }
 
-__forceinline void hSystem_displayConnections()
+inline void hSystem_displayConnections()
 {
 	if (hSystem != nullptr)
 	{
@@ -95,7 +95,7 @@ __forceinline void hSystem_displayConnections()
 	}
 }
 
-__forceinline void hSystem_reset()
+inline void hSystem_reset()
 {
 	if (hSystem != nullptr)
 	{
@@ -103,7 +103,7 @@ __forceinline void hSystem_reset()
 	}
 }
 
-__forceinline void hSystem_load()
+inline void hSystem_load()
 {
 	if (hSystem != nullptr)
 	{
@@ -111,22 +111,23 @@ __forceinline void hSystem_load()
 	}
 }
 
-__forceinline void hSystem_save()
+inline void hSystem_save()
 {
 	if (hSystem != nullptr)
 	{
 		hSystem->saveGraph();
 	}
 }
-__forceinline void hSystem_validateGraph()
+
+inline void hSystem_validateGraph()
 {
 	if (hSystem != nullptr)
 	{
-		hSystem->validateGraph();
+		hSystem->validateGraphMenu();
 	}
 }
 
-__forceinline void hSystem_regulate()
+inline void hSystem_adjust()
 {
 	if (hSystem != nullptr)
 	{
@@ -139,10 +140,10 @@ void adminMenu()
 	Menu adminMenu("View House");
 
 	adminMenu.setWidth(40);
-	adminMenu.addItem('1', "Validate graph");
+	adminMenu.addItem('1', "Validate Graph");
 	adminMenu.addHandler('1', hSystem_validateGraph);
-	adminMenu.addItem('2', "yyyy");
-	adminMenu.addHandler('2', hSystem_regulate);
+	adminMenu.addItem('2', "Auto-Adjust");
+	adminMenu.addHandler('2', hSystem_adjust);
 	adminMenu.addSeparator();
 	adminMenu.addItem('3', "Display rooms");
 	adminMenu.addHandler('3', hSystem_displayRooms);
@@ -180,13 +181,12 @@ void settingsMenu()
 	settingsMenu.addSeparator();
 	settingsMenu.addItem('9', "<- Back");
 	settingsMenu.addHandler('9', nullptr);
-
 	settingsMenu.run();
 }
 
 void mainMenu()
 {
-	Menu mainMenu("Sistema de Aquecimento Central");
+	Menu mainMenu("CENTRAL HEATING SYSTEM");
 
 	mainMenu.setWidth(40);
 	mainMenu.addItem('1', "View House");
