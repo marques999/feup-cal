@@ -81,7 +81,7 @@ namespace UI
 	* @param w number of precision digits (field width)
 	* @return returns a string containing the formatted value
 	*/
-	string FormatWeight(double n, unsigned w);
+	string FormatWeight(double n);
 
 	/**
 	* @brief formats a floating point number as a temperature value

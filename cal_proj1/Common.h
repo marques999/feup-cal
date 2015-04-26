@@ -88,6 +88,21 @@ public:
 	}
 };
 
+class TargetRoomNotFound : public CustomException
+{
+public:
+
+	TargetRoomNotFound(const string &s) : CustomException(s)
+	{
+	}
+
+	string str() const
+	{
+		return "ERROR: target room " + args + " not found.";
+	}
+};
+
+
 class BoilerNoConnections : public MessageException
 {
 public:

@@ -45,6 +45,7 @@ public:
 	void writeEdge(unsigned edgeId, ofstream &fout) const;
 	void writeVertex(unsigned vertexId, ofstream &fout) const;
 
+	void findBestMenu();
 	void displayRooms() const;
 	void displayConnections() const;
 	
@@ -63,10 +64,11 @@ public:
 	void removeConnection();
 	void removeConnectionGraphViewer(unsigned src, unsigned dst);
 
+	void updateGraphViewer();
 	void changeTemperature();
 	void changeTemperatureGraphViewer(Vertex<Room>* &room);
-	void changeWeight(); // is it needed?
-	void changeWeightGraphViewer(unsigned edgeId, unsigned weight);
+	void changeWaterTemperatureGraphViewer(unsigned edgeId, double temperature);
+	void changeWeightGraphViewer(unsigned edgeId, double weight);
 
 	bool validateGraph() const;
 	bool validateTemperature(double temperature) const;
@@ -125,11 +127,13 @@ private:
 	string roomName(unsigned id) const;
 
 	void increaseFlow(unsigned vertexId);
-	double calculateTemperature(const Room &room, const Pipe &pipe, double t, double q) const;
+	double calculateRoomTemperature(const Room &room, const Pipe &pipe, double waterTemperature, double targetFlow) const;
+	double calculateWaterTemperature(const Room& room, const Pipe&, double targetTemperature, double targetFlow) const;
 	unsigned convertPositionX(int x);
 	unsigned convertPositionY(int y);
 	void drawFloorplan(int x, int y);
 	char* formatRoom(const Room &r) const;
+	char* formatWeight(const Pipe &p) const;
 	bool positionRoom();
 	bool findPosition();
 	void addBoiler();
@@ -137,6 +141,7 @@ private:
 	void setVertexColor(unsigned vertexId, double roomTemperature) const;
 	void removePosition(int x, int y);
 
+	void findBest(unsigned vertexId, double targetTemperature);
 	unsigned findHighestTemperature() const;
 	unsigned findLowestTemperature() const;
 

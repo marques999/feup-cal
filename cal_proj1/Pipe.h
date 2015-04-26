@@ -54,12 +54,22 @@ public:
 		return _dst;
 	}
 
+	double temperature() const
+	{
+		return _temperature;
+	}
+
 	double weight() const
 	{
 		return _weight;
 	}
 
-	void change(unsigned weight)
+	void setTemperature(double temperature)
+	{
+		_temperature = temperature;
+	}
+
+	void setWeight(double weight)
 	{
 		_weight = weight;
 	}

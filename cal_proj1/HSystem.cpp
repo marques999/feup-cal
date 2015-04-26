@@ -88,22 +88,24 @@ unsigned HSystem::convertPositionY(int y)
 
 void HSystem::displayConnections() const
 {
-	const int rowCount = 4;
-	const int tableLength[rowCount] = { 8, 24, 24, 12 };
+	const int rowCount = 5;
+	const int tableLength[rowCount] = { 8, 20, 20, 10, 13};
 
-	vector<string> tableLabel = { " ID", " From", " To", " Quantity" };
+	vector<string> tableLabel = { " ID", " From", " To", " Quantity", " Temperature" };
 
 	UI::DisplayFrame("PIPES");
 	UI::DisplayTable(rowCount, tableLabel, tableLength);
 
 	for (auto &p : pipes)
 	{
+		Pipe currentPipe = p.second;
 		vector<string> tableRow(rowCount);
 
 		tableRow[0] = UI::Format(p.first, 7);
-		tableRow[1] = roomName(p.second.source());
-		tableRow[2] = roomName(p.second.dest());
-		tableRow[3] = UI::FormatWeight(p.second.weight(), 1);
+		tableRow[1] = roomName(currentPipe.source());
+		tableRow[2] = roomName(currentPipe.dest());
+		tableRow[3] = UI::FormatWeight(currentPipe.weight());
+		tableRow[4] = UI::FormatTemperature(currentPipe.temperature());
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
 	}
 
@@ -125,14 +127,15 @@ void HSystem::displayRooms() const
 
 	for (auto &r : rooms)
 	{
+		Room currentRoom = r.second;
 		vector<string> tableRow(rowCount);
 
 		tableRow[0] = UI::Format(r.first, 7);
-		tableRow[1] = r.second.getName();
-		tableRow[2] = UI::Format(r.second.getX(), 2);
-		tableRow[3] = UI::Format(r.second.getY(), 2);
-		tableRow[4] = UI::FormatTemperature(r.second.getTemperature());
-		tableRow[5] = r.second.isEnabled() ? "Enabled" : "Disabled";
+		tableRow[1] = currentRoom.getName();
+		tableRow[2] = UI::Format(currentRoom.getX(), 2);
+		tableRow[3] = UI::Format(currentRoom.getY(), 2);
+		tableRow[4] = UI::FormatTemperature(currentRoom.getTemperature());
+		tableRow[5] = currentRoom.isEnabled() ? "Enabled" : "Disabled";
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
 	}
 
@@ -346,8 +349,8 @@ void HSystem::resetFlowGraphViewer()
 {
 	for (auto &p : pipes)
 	{
-		p.second.change(defaultWeight);
-		gv->setEdgeLabel(p.first, UI::FormatWeight(defaultWeight, 1));
+		p.second.setWeight(defaultWeight);
+		gv->setEdgeLabel(p.first, UI::FormatWeight(p.second.weight()));
 	}
 }
 
@@ -439,32 +442,81 @@ string readString(const string& prompt)
 	return input;
 }
 
-void HSystem::increaseFlow(unsigned vertexId)
+void HSystem::findBest(unsigned vertexId, double targetTemperature)
 {
-	Vertex<Room>* srcRoom = g.getVertex(rooms.at(0));
-	Vertex<Room>* u;
-	Vertex<Room>* v;
-	Vertex<Room>* dstRoom = g.getVertex(rooms.at(vertexId));
-	vector<Vertex<Room>* > roomPath;
+	vector<double> weights;
 
-	while (g.bfs(dstRoom, roomPath))
+	for (double weight = 5.0; weight <= 100.0; weight += 5.0)
 	{
-		for (Vertex<Room>* v = dstRoom; v != srcRoom; v = v->path)
+		weights.push_back(weight);
+	}
+
+	if (rooms.find(vertexId) == rooms.end())
+	{
+		return;
+	}
+
+	Room targetRoom = rooms.at(vertexId);
+
+	vector<double> bestTemperature;
+	vector<vector<unsigned >> bestPath;
+
+	for (double weight : weights)
+	{
+	
+		// executar algoritmo de dijkstra modificado
+	}
+}
+
+const string promptTargetRoom = "Enter target room name:";
+const string promptTargetTemperature = "Enter target room temperature: ";
+
+void HSystem::findBestMenu()
+{
+	string targetName = readString(promptTargetRoom);
+	Vertex<Room>* targetRoom = getRoom(targetName);
+
+	if (targetRoom == nullptr)
+	{
+		throw TargetRoomNotFound(targetName);
+	}
+
+	double targetTemperature = readValue<double>(promptTargetTemperature);
+
+	if (!validateTemperature(targetTemperature))
+	{
+		throw InvalidParameter();
+	}
+
+	//findBest(targetRoom->id, targetTemperature);
+	//updateGraphViewer();
+
+	UI::DisplayMessage("INFORMATION: room temperature successfully changed to match target.");
+}
+
+void HSystem::updateGraphViewer()
+{
+	vector<Vertex<Room> *> vertices = g.getVertices();
+
+	for (auto &v : vertices)
+	{
+		if (rooms.find(v->id) != rooms.end())
 		{
-		//	u = v->path;
+			rooms[v->id].setTemperature(v->info.getTemperature());
+			changeTemperatureGraphViewer(v);
+		}
 
-			for (auto& e : pipes)
+		for (auto &e : v->adj)
+		{
+			if (pipes.find(e.id) != pipes.end())
 			{
-				if (e.second.source() == u->id && e.second.dest() == v->id)
-				{
-				//	double newTemperature = calculateTemperature(u->info, e.second, 20, 5);
-				//	rooms.at(u->id).setTemperature(newTemperature);
-				}
+				pipes[e.id].setWeight(e.weight);
+				pipes[e.id].setTemperature(20);
+				gv->setEdgeLabel(e.id, formatWeight(pipes.at(e.id)));
 			}
-			
-
 		}
 	}
+
 }
 
 void HSystem::loadGraph()
@@ -711,9 +763,15 @@ void HSystem::enableRoom()
 
 char* HSystem::formatRoom(const Room &r) const
 {
-	const size_t stringLength = r.getName().length() + 1;
-	char* buffer = new char[stringLength + 10];
+	char* buffer = new char[r.getName().length() + 16];
 	sprintf(buffer, "%s (%.1fC)", r.getName().c_str(), r.getTemperature());
+	return buffer;
+}
+
+char* HSystem::formatWeight(const Pipe &p) const
+{
+	char* buffer = new char[16];
+	sprintf(buffer, "%.1f / %.1fC", p.weight(), p.temperature());
 	return buffer;
 }
 
@@ -1017,7 +1075,7 @@ void HSystem::addConnectionGraphViewer(unsigned edgeId, const Pipe &pipe)
 	{
 		pipes[edgeId] = pipe;
 		gv->addEdge(edgeId, pipe.source(), pipe.dest(), EdgeType::DIRECTED);
-		gv->setEdgeLabel(edgeId, UI::FormatWeight(pipe.weight(), 1));
+		gv->setEdgeLabel(edgeId, formatWeight(pipe));
 		gv->rearrange();
 	}
 }
@@ -1051,6 +1109,16 @@ void HSystem::changeTemperatureGraphViewer(Vertex<Room>* &room)
 	}
 }
 
+void HSystem::changeWaterTemperatureGraphViewer(unsigned edgeId, double temperature)
+{
+	if (pipes.find(edgeId) != pipes.end())
+	{
+		pipes[edgeId].setTemperature(temperature);
+		gv->setEdgeLabel(edgeId, formatWeight(pipes.at(edgeId)));
+		gv->rearrange();
+	}
+}
+
 void HSystem::removeRoomGraphViewer(unsigned vertexId)
 {
 	map<unsigned, Pipe>::iterator currentPipe = pipes.begin();
@@ -1076,12 +1144,12 @@ void HSystem::removeRoomGraphViewer(unsigned vertexId)
 	}
 }
 
-void HSystem::changeWeightGraphViewer(unsigned edgeId, unsigned weight)
+void HSystem::changeWeightGraphViewer(unsigned edgeId, double weight)
 {
 	if (pipes.find(edgeId) != pipes.end())
 	{
-		pipes[edgeId].change(weight);
-		gv->setEdgeLabel(edgeId, UI::FormatWeight(weight, 1));
+		pipes[edgeId].setWeight(weight);
+		gv->setEdgeLabel(edgeId, formatWeight(pipes.at(edgeId)));
 		gv->rearrange();
 	}
 }
@@ -1125,11 +1193,16 @@ bool HSystem::validateTemperature(double temperature) const
 	return (temperature >= minimumTemperature && temperature <= maximumTemperature);
 }
 
-double HSystem::calculateTemperature(const Room &room, const Pipe &pipe, double t, double q) const
+// FUNÇÂO COST
+double HSystem::calculateRoomTemperature(const Room &room, const Pipe &pipe, double waterTemperature, double targetFlow) const
 {
-	return (room.getTemperature() * pipe.weight() + t * q) / (pipe.weight() + q);
+	return (room.getTemperature() * pipe.weight() + waterTemperature * targetFlow) / (pipe.weight() + targetFlow);
 }
 
+double HSystem::calculateWaterTemperature(const Room& room, const Pipe&, double targetTemperature, double targetFlow) const
+{
+
+}
 unsigned HSystem::findLowestTemperature() const
 {
 	unsigned roomId = -1;

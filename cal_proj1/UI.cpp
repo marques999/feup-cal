@@ -158,10 +158,10 @@ namespace UI
 		return os.str();
 	}
 
-	string FormatWeight(double n, unsigned w)
+	string FormatWeight(double n)
 	{
 		ostringstream os;
-		os << setw(w + 3) << left << fixed << setprecision(w) << n;
+		os << left << setw(5) << fixed << setprecision(1) << n << "%";
 		return os.str();
 	}
 
