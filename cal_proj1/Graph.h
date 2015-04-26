@@ -30,12 +30,11 @@ template <class T>
 class Graph
 {
 	vector<Vertex<T> *> vertices;
-	void dfs(Vertex<T> *v, vector<T> &res) const;
 
+	void dfs(Vertex<T> *v, vector<T> &res) const;
 	int numCycles;
 	void dfsVisit(Vertex<T> *v);
 	void dfsVisit();
-	void getPathTo(Vertex<T> *origin, list<T> &res);
 
 protected:
 
@@ -67,9 +66,7 @@ public:
 	int getNumCycles();
 	bool isDAG();
 	vector<T> topologicalOrder();
-	vector<T> getPath(const T &origin, const T &dest);
-
-	void unweightedShortestPath(const T &v);
+	map<unsigned, T> Graph<T>::dijkstra(Vertex<T>* &dst);
 };
 
 template <class T>
@@ -513,6 +510,64 @@ vector<T> Graph<T>::topologicalOrder()
 }
 
 template<class T>
+map<unsigned, T> Graph<T>::dijkstra(Vertex<T>* &dst) ////////
+{
+	map<unsigned, T> res;
+	queue<Vertex<T>* > q;
+
+	if (!isDAG())
+	{
+		return res;
+	}
+
+	resetIndegrees();
+
+	if (vertices.empty())
+	{
+		return res;
+	}
+	
+	q.push(vertices[0]);
+
+	while (!q.empty())
+	{
+		Vertex<T>* v = q.front();
+
+		q.pop();
+		res.push_back(v->info);
+
+		for (const Edge<T> &e : v->adj)
+		{
+			Vertex<T>* w = e.dest;
+
+			e.dest->indegree--;
+
+			if (w->indegree == 0)
+			{
+				if (v->dist + e.weight < w->dist)
+				{
+					w->dist = v->dist + e.weight;
+					w->path = v;
+					q.push(w);
+				}			
+			}
+		}
+	}
+
+	if (res.size() != vertices.size())
+	{
+		while (!res.empty())
+		{
+			res.pop_back();
+		}
+	}
+
+	resetIndegrees();
+
+	return res;
+}
+
+template<class T>
 void Graph<T>::unweightedShortestPath(const T &src)
 {
 	for (Vertex<T>* v : vertices)
@@ -546,44 +601,5 @@ void Graph<T>::unweightedShortestPath(const T &src)
 	}
 }
 
-template<class T>
-void Graph<T>::getPathTo(Vertex<T> *dst, list<T> &res)
-{
-	res.push_back(dst->info);
-
-	if (dst->path != nullptr)
-	{
-		getPathTo(dst->path, res);
-	}
-}
-
-template<class T>
-vector<T> Graph<T>::getPath(const T &src, const T &dst)
-{
-	unweightedShortestPath(src);
-
-	list<T> buffer;
-	Vertex<T>* v = getVertex(dst);
-
-	buffer.push_front(v->info);
-
-	while (v->path->info != origin)
-	{
-		v = v->path;
-		buffer.push_front(v->info);
-	}
-
-	buffer.push_front(v->path->info);
-
-	vector<T> res;
-
-	while (!buffer.empty())
-	{
-		res.push_back(buffer.front());
-		buffer.pop_front();
-	}
-
-	return res;
-}
 
 #endif /* __GRAPH_H_ */

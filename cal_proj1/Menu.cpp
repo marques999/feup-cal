@@ -126,6 +126,15 @@ __forceinline void hSystem_validateGraph()
 	}
 }
 
+__forceinline void hSystem_regulate()
+{
+	if (hSystem != nullptr)
+	{
+		cout << hSystem->calculateRoomTemperature(19.0, 10.0, 25.0, 8.0) << endl;
+		UI::PauseConsole();
+	}
+}
+
 void adminMenu()
 {
 	Menu adminMenu("View House");
@@ -134,6 +143,7 @@ void adminMenu()
 	adminMenu.addItem('1', "Validate graph");
 	adminMenu.addHandler('1', hSystem_validateGraph);
 	adminMenu.addItem('2', "yyyy");
+	adminMenu.addHandler('2', hSystem_regulate);
 	adminMenu.addSeparator();
 	adminMenu.addItem('3', "Display rooms");
 	adminMenu.addHandler('3', hSystem_displayRooms);

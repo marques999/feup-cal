@@ -1194,15 +1194,16 @@ bool HSystem::validateTemperature(double temperature) const
 }
 
 // FUNÇÂO COST
-double HSystem::calculateRoomTemperature(const Room &room, const Pipe &pipe, double waterTemperature, double targetFlow) const
+double HSystem::calculateRoomTemperature(double TempAntes, double QAntes, double TempAdicional, double QAdicional) const
 {
-	return (room.getTemperature() * pipe.weight() + waterTemperature * targetFlow) / (pipe.weight() + targetFlow);
+	return (TempAntes * QAntes + TempAdicional * QAdicional) / (QAntes + QAdicional);
 }
 
-double HSystem::calculateWaterTemperature(const Room& room, const Pipe&, double targetTemperature, double targetFlow) const
+double HSystem::calculateWaterTemperature(double TempAntes, double QAntes, double NovaTemp, double QAdicional) const
 {
-
+	return (QAntes * TempAntes - NovaTemp * QAntes - NovaTemp * QAdicional) / QAdicional;
 }
+
 unsigned HSystem::findLowestTemperature() const
 {
 	unsigned roomId = -1;

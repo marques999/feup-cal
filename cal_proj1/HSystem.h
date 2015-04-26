@@ -69,7 +69,8 @@ public:
 	void changeTemperatureGraphViewer(Vertex<Room>* &room);
 	void changeWaterTemperatureGraphViewer(unsigned edgeId, double temperature);
 	void changeWeightGraphViewer(unsigned edgeId, double weight);
-
+	double calculateRoomTemperature(double TempAntes, double QAntes, double TempAdicional, double QAdicional) const;
+	double calculateWaterTemperature(double TempAntes, double QAntes, double NovaTemp, double QAdicional) const;
 	bool validateGraph() const;
 	bool validateTemperature(double temperature) const;
 
@@ -127,8 +128,7 @@ private:
 	string roomName(unsigned id) const;
 
 	void increaseFlow(unsigned vertexId);
-	double calculateRoomTemperature(const Room &room, const Pipe &pipe, double waterTemperature, double targetFlow) const;
-	double calculateWaterTemperature(const Room& room, const Pipe&, double targetTemperature, double targetFlow) const;
+
 	unsigned convertPositionX(int x);
 	unsigned convertPositionY(int y);
 	void drawFloorplan(int x, int y);
