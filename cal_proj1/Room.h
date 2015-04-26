@@ -31,6 +31,10 @@ public:
 	{
 	}
 
+	Room(const string &s, const double t, const double c) : _name(s), _temperature(t), _caudal(c), _enabled(true), _x(0), _y(0)
+	{
+	}
+
 	Room(ifstream &fin)
 	{
 		read(fin);
@@ -76,6 +80,11 @@ public:
 		_enabled = false;
 	}
 
+	double getCaudal() const
+	{
+		return _caudal;
+	}
+
 	double getTemperature() const
 	{
 		return _temperature;
@@ -84,6 +93,11 @@ public:
 	void setTemperature(double newTemperature)
 	{
 		_temperature = newTemperature;
+	}
+
+	void setCaudal(double newCaudal)
+	{
+		_caudal = newCaudal;
 	}
 
 	bool operator==(const Room &rhs) const
@@ -95,6 +109,7 @@ public:
 	{
 		getline(fin, _name);
 		fin.read((char*)&_temperature, sizeof(double));
+		fin.read((char*)&_caudal, sizeof(double));
 		fin.read((char*)&_x, sizeof(int));
 		fin.read((char*)&_y, sizeof(int));
 		fin.read((char*)&_enabled, sizeof(unsigned char));
@@ -104,6 +119,7 @@ public:
 	{
 		fout << _name << endl;
 		fout.write((char*)&_temperature, sizeof(double));
+		fout.write((char*)&_caudal, sizeof(double));
 		fout.write((char*)&_x, sizeof(int));
 		fout.write((char*)&_y, sizeof(int));
 		fout.write((char*)&_enabled, sizeof(unsigned char));
@@ -112,9 +128,11 @@ public:
 private:
 
 	string _name;
+
 	bool _enabled;
 	int _x;
 	int _y;
+	double _caudal;
 	double _temperature;
 };
 

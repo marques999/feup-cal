@@ -89,9 +89,9 @@ unsigned HSystem::convertPositionY(int y)
 void HSystem::displayConnections() const
 {
 	const int rowCount = 5;
-	const int tableLength[rowCount] = { 8, 20, 20, 10, 13 };
+	const int tableLength[rowCount] = { 8, 24, 24 };
 
-	vector<string> tableLabel = { " ID", " From", " To", " Quantity", " Temperature" };
+	vector<string> tableLabel = { " ID", " From", " To" };
 
 	UI::DisplayFrame("PIPES");
 	UI::DisplayTable(rowCount, tableLabel, tableLength);
@@ -104,8 +104,6 @@ void HSystem::displayConnections() const
 		tableRow[0] = UI::Format(p.first, 7);
 		tableRow[1] = roomName(currentPipe.source());
 		tableRow[2] = roomName(currentPipe.dest());
-		tableRow[3] = UI::FormatWeight(currentPipe.weight());
-		tableRow[4] = UI::FormatTemperature(currentPipe.temperature());
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
 	}
 
@@ -178,7 +176,7 @@ void HSystem::readEdge(ifstream &fin)
 		return;
 	}
 
-	g.addEdge(edgeId, srcRoom->second, dstRoom->second, newPipe.weight());
+	g.addEdge(edgeId, srcRoom->second, dstRoom->second);
 	addConnectionGraphViewer(edgeId, newPipe);
 }
 
@@ -328,7 +326,7 @@ void HSystem::saveGraph(const string &filename) const
 
 void HSystem::addBoiler()
 {
-	Room roomCaldeira("Caldeira", defaultTemperature);
+	Room roomCaldeira("Caldeira", defaultTemperature, defaultWeight);
 
 	rooms[0] = roomCaldeira;
 	g.addVertex(roomCaldeira);
@@ -340,45 +338,59 @@ void HSystem::addBoiler()
 
 void HSystem::resetFlow()
 {
-	g.resetWeights(defaultWeight);
+	vector<Vertex<Room>* > vertices = g.getVertices();
+
+	for (auto &v : vertices)
+	{
+		v->info.setCaudal(defaultWeight);
+		cout << "caudal: " << v->info.getCaudal() << endl;
+	}
+
 	resetFlowGraphViewer();
 	UI::DisplayMessage(resetWeightSuccess);
 }
 
 void HSystem::resetFlowGraphViewer()
 {
-	for (auto &p : pipes)
+	for (auto &r : rooms)
 	{
-		p.second.setWeight(defaultWeight);
-		gv->setEdgeLabel(p.first, UI::FormatWeight(p.second.weight()));
+		r.second.setCaudal(defaultWeight);
+		gv->setVertexLabel(r.first, formatRoom(r.second));
 	}
 }
 
 void HSystem::setVertexColor(unsigned vertexId, double roomTemperature) const
 {
-	if (roomTemperature < 10.0)
+	if (vertexId == 0)
 	{
-		gv->setVertexColor(vertexId, "MAGENTA");
-	}
-	else if (roomTemperature < 15.0)
-	{
-		gv->setVertexColor(vertexId, "BLUE");
-	}
-	else if (roomTemperature < 20.0)
-	{
-		gv->setVertexColor(vertexId, "CYAN");
-	}
-	else if (roomTemperature < 25.0)
-	{
-		gv->setVertexColor(vertexId, "YELLOW");
-	}
-	else if (roomTemperature < 30.0)
-	{
-		gv->setVertexColor(vertexId, "ORANGE");
+		gv->setVertexColor(vertexId, "DARK_GRAY");
 	}
 	else
 	{
-		gv->setVertexColor(vertexId, "RED");
+		if (roomTemperature < 10.0)
+		{
+			gv->setVertexColor(vertexId, "MAGENTA");
+		}
+		else if (roomTemperature < 15.0)
+		{
+			gv->setVertexColor(vertexId, "BLUE");
+		}
+		else if (roomTemperature < 20.0)
+		{
+			gv->setVertexColor(vertexId, "CYAN");
+		}
+		else if (roomTemperature < 25.0)
+		{
+			gv->setVertexColor(vertexId, "YELLOW");
+		}
+		else if (roomTemperature < 30.0)
+		{
+			gv->setVertexColor(vertexId, "ORANGE");
+		}
+		else
+		{
+			gv->setVertexColor(vertexId, "RED");
+		}
 	}
 }
 
@@ -442,30 +454,49 @@ string readString(const string& prompt)
 	return input;
 }
 
-void HSystem::findBest(unsigned vertexId, double targetTemperature)
+void HSystem::findBest(unsigned vertexId, double novaTemp)
 {
-	vector<double> weights;
+	double currentWeight = 5.0;
 
-	for (double weight = 5.0; weight <= 100.0; weight += 5.0)
-	{
-		weights.push_back(weight);
-	}
+	int weightIndex = 0;
 
 	if (rooms.find(vertexId) == rooms.end())
 	{
 		return;
 	}
 
-	Room targetRoom = rooms.at(vertexId);
+	Vertex<Room>* targetRoom = g.getVertex(rooms.at(vertexId));
 
-	vector<double> bestTemperature;
-	vector<vector<unsigned >> bestPath;
+	double tempAntes = targetRoom->info.getTemperature();
+	double QAntes = targetRoom->info.getCaudal();
 
-	for (double weight : weights)
+	double worstTemperature = 0.0;
+
+	map<unsigned, double> bestPath;
+	map<unsigned, double> currentPath;
+
+	while (true)
 	{
-
-		// executar algoritmo de dijkstra modificado
+		double tempAdicional = calculateWaterTemperature(tempAntes, QAntes, novaTemp, currentWeight);
+		
+		currentPath = dijkstra(targetRoom, tempAdicional, currentWeight, worstTemperature);
+		currentWeight += 5.0;
 	}
+
+	currentWeight -= 5.0;
+
+	vector<Vertex<Room>* > vertices = g.getVertices();
+
+	// escolhe mínimo das máximas variações
+
+	for (auto &v : vertices)
+	{
+		// altera caudal das divisões atravessadas
+	}
+
+	updateGraphViewer();
+
+	UI::DisplayMessage("INFORMATION: room temperature successfully changed to match target.");
 }
 
 const string promptTargetRoom = "Enter target room name:";
@@ -494,15 +525,18 @@ void HSystem::findBestMenu()
 	}
 
 	double tempAntes = targetRoom->info.getTemperature();
-	double QAntes = 70.0;
+	double QAntes = targetRoom->info.getCaudal();
 	double tempAdicional = calculateWaterTemperature(tempAntes, QAntes, novaTemp, 15);
+	double delta = 0.0;
+
 	cout << "Temperatura adicional: " << tempAdicional << endl;
-	dijkstra(targetRoom, tempAdicional, 15);
+	dijkstra(targetRoom, tempAdicional, 15, delta);
 
 	//findBest(targetRoom->id, targetTemperature);
-	//updateGraphViewer();
 
-	UI::DisplayMessage("INFORMATION: room temperature successfully changed to match target.");
+	cout << "pior diferenca: " << delta << endl;
+	UI::PauseConsole();
+
 }
 
 void HSystem::updateGraphViewer()
@@ -513,21 +547,11 @@ void HSystem::updateGraphViewer()
 	{
 		if (rooms.find(v->id) != rooms.end())
 		{
+			rooms[v->id].setCaudal(v->info.getCaudal());
 			rooms[v->id].setTemperature(v->info.getTemperature());
 			changeTemperatureGraphViewer(v);
 		}
-
-		for (auto &e : v->adj)
-		{
-			if (pipes.find(e.id) != pipes.end())
-			{
-				pipes[e.id].setWeight(e.weight);
-				pipes[e.id].setTemperature(20);
-				gv->setEdgeLabel(e.id, formatWeight(pipes.at(e.id)));
-			}
-		}
 	}
-
 }
 
 void HSystem::loadGraph()
@@ -649,7 +673,7 @@ void HSystem::addRoom()
 			throw InvalidParameter();
 		}
 
-		Room newRoom(roomName, roomTemperature);
+		Room newRoom(roomName, roomTemperature, defaultWeight);
 
 		if (positionRoom())
 		{
@@ -774,15 +798,8 @@ void HSystem::enableRoom()
 
 char* HSystem::formatRoom(const Room &r) const
 {
-	char* buffer = new char[r.getName().length() + 16];
-	sprintf(buffer, "%s (%.1fC)", r.getName().c_str(), r.getTemperature());
-	return buffer;
-}
-
-char* HSystem::formatWeight(const Pipe &p) const
-{
-	char* buffer = new char[16];
-	sprintf(buffer, "%.1f / %.1fC", p.weight(), p.temperature());
+	char* buffer = new char[r.getName().length() + 32];
+	sprintf(buffer, "%s (%.1fC, %.1f%)", r.getName().c_str(), r.getTemperature(), r.getCaudal());
 	return buffer;
 }
 
@@ -848,7 +865,7 @@ void HSystem::addConnection()
 	}
 	else
 	{
-		int edgeId = g.addEdge(srcRoom->info, dstRoom->info, defaultWeight);
+		int edgeId = g.addEdge(srcRoom->info, dstRoom->info);
 
 		if (edgeId != -1)
 		{
@@ -859,7 +876,7 @@ void HSystem::addConnection()
 			}
 			else
 			{
-				addConnectionGraphViewer(edgeId, Pipe(srcRoom->id, dstRoom->id, defaultWeight));
+				addConnectionGraphViewer(edgeId, Pipe(srcRoom->id, dstRoom->id));
 				UI::DisplayMessage(roomConnectSuccess);
 			}
 		}
@@ -1086,7 +1103,6 @@ void HSystem::addConnectionGraphViewer(unsigned edgeId, const Pipe &pipe)
 	{
 		pipes[edgeId] = pipe;
 		gv->addEdge(edgeId, pipe.source(), pipe.dest(), EdgeType::DIRECTED);
-		gv->setEdgeLabel(edgeId, formatWeight(pipe));
 		gv->rearrange();
 	}
 }
@@ -1120,16 +1136,6 @@ void HSystem::changeTemperatureGraphViewer(Vertex<Room>* &room)
 	}
 }
 
-void HSystem::changeWaterTemperatureGraphViewer(unsigned edgeId, double temperature)
-{
-	if (pipes.find(edgeId) != pipes.end())
-	{
-		pipes[edgeId].setTemperature(temperature);
-		gv->setEdgeLabel(edgeId, formatWeight(pipes.at(edgeId)));
-		gv->rearrange();
-	}
-}
-
 void HSystem::removeRoomGraphViewer(unsigned vertexId)
 {
 	map<unsigned, Pipe>::iterator currentPipe = pipes.begin();
@@ -1155,12 +1161,12 @@ void HSystem::removeRoomGraphViewer(unsigned vertexId)
 	}
 }
 
-void HSystem::changeWeightGraphViewer(unsigned edgeId, double weight)
+void HSystem::changeWeightGraphViewer(unsigned vertexId, double weight)
 {
-	if (pipes.find(edgeId) != pipes.end())
+	if (rooms.find(vertexId) != rooms.end())
 	{
-		pipes[edgeId].setWeight(weight);
-		gv->setEdgeLabel(edgeId, formatWeight(pipes.at(edgeId)));
+		rooms[vertexId].setCaudal(weight);
+		gv->setVertexLabel(vertexId, formatRoom(rooms.at(vertexId)));
 		gv->rearrange();
 	}
 }
@@ -1215,7 +1221,7 @@ double HSystem::calculateWaterTemperature(double TempAntes, double QAntes, doubl
 	return (QAntes * TempAntes - NovaTemp * QAntes - NovaTemp * QAdicional) / -QAdicional;
 }
 
-map<unsigned, double> HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional, double QAdicional) ////////
+map<unsigned, double> HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional, double QAdicional, double &worstTemperature) ////////
 {
 	map<unsigned, double> res;
 	queue<Vertex<Room>* > q;
@@ -1255,15 +1261,22 @@ map<unsigned, double> HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional
 			e.dest->indegree--;
 
 			double tempAntes = w->info.getTemperature();
-			double QAntes = e.weight;
+			double QAntes = w->info.getCaudal();
 			double novaTemp = calculateRoomTemperature(tempAntes, QAntes, tempAdicional, QAdicional);
 			
 			cout << "Nova temepratura para o vertice " << w->id << ": " << novaTemp << endl;
 			
-			if (abs(tempAntes - novaTemp) < w->dist)
+			double deltaTemperatura = abs(tempAntes - novaTemp);
+			
+			if (deltaTemperatura < w->dist)
 			{
-				cout << "nova variacao minima ! " << abs(tempAntes - novaTemp) << endl;
-				w->dist = abs(tempAntes - novaTemp);
+				if (deltaTemperatura > worstTemperature)
+				{
+					worstTemperature = deltaTemperatura;
+				}
+
+				cout << "nova variacao minima ! " << deltaTemperatura << endl;
+				w->dist = deltaTemperatura;
 				res[w->id] = novaTemp;
 				w->path = v;
 			}
@@ -1273,28 +1286,8 @@ map<unsigned, double> HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional
 				q.push(w);
 			}
 		}
-
-
 	}
-
-/*	if (res.size() != g.getVertices.size())
-	{
-		while (!res.empty())
-		{
-			res.pop_back();
-		}
-	}
-	*/
 	
-	cout << "Melhor caminho: ";
-
-	for (Vertex<Room>* i = dst; i != boilerRoom; i = i->path)
-	{
-		i->info.setTemperature(res.at(i->id));
-		changeTemperatureGraphViewer(i);
-		cout << i->info.getName() << ", ";
-	}
-
 	g.resetIndegrees();
 
 	return res;

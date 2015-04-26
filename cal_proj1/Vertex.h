@@ -31,7 +31,6 @@ struct Vertex
 
 	T info;
 	Vertex<T>* path;
-	Vertex<T>* clone() const;
 	vector<Edge<T> > adj;
 
 	bool visited;
@@ -40,24 +39,9 @@ struct Vertex
 	int indegree;
 	double dist;
 
-	void addEdge(unsigned edgeId, Vertex<T> *dst, double w);
+	void addEdge(unsigned edgeId, Vertex<T> *dst);
 	bool removeEdgeTo(Vertex<T> *dst);
 };
-
-template <class T>
-Vertex<T>* Vertex<T>::clone() const
-{
-	Vertex<T>* v = new Vertex<T>(this->id, this->info);
-
-	v->adj = this->adj;
-	v->visited = this->visited;
-	v->indegree = this->indegree;
-	v->dist = this->dist;
-	v->processing = this->processing;
-	v->path = 0;
-
-	return v;
-}
 
 template <class T>
 bool Vertex<T>::removeEdgeTo(Vertex<T> *dst)
@@ -83,9 +67,9 @@ bool Vertex<T>::removeEdgeTo(Vertex<T> *dst)
 }
 
 template <class T>
-void Vertex<T>::addEdge(unsigned edgeId, Vertex<T> *dst, double w)
+void Vertex<T>::addEdge(unsigned edgeId, Vertex<T> *dst)
 {
-	adj.push_back(Edge<T>(edgeId, dst, w));
+	adj.push_back(Edge<T>(edgeId, dst));
 }
 
 #endif /* __VERTEX_H_ */

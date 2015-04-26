@@ -45,8 +45,8 @@ public:
 
 	int addVertex(const T &in);
 	bool addVertex(unsigned vertexId, const T &in);
-	int addEdge(const T &sourc, const T &dest, double w);
-	bool addEdge(unsigned edgeId, const T &sourc, const T &dest, double w);
+	int addEdge(const T &sourc, const T &dest);
+	bool addEdge(unsigned edgeId, const T &sourc, const T &dest);
 	int removeVertex(const T &in);
 	bool removeEdge(const T &sourc, const T &dest);
 
@@ -61,7 +61,6 @@ public:
 	void resetDists() const;
 	Vertex<T>* getVertex(const T &v) const;
 	void resetIndegrees();
-	void resetWeights(double weight);
 	vector<Vertex<T>*> getSources() const;
 	int getNumCycles();
 	bool isDAG();
@@ -87,18 +86,6 @@ void Graph<T>::resetDists() const
 	{
 		v->path = nullptr;
 		v->dist = numeric_limits<double>::max();
-	}
-}
-
-template <class T>
-void Graph<T>::resetWeights(double weight)
-{
-	for (Vertex<T>* v : vertices)
-	{
-		for (Edge<T> &e : v->adj)
-		{
-			e.weight = weight;
-		}
 	}
 }
 
@@ -182,11 +169,11 @@ int Graph<T>::removeVertex(const T &in)
 }
 
 template <class T>
-int Graph<T>::addEdge(const T &src, const T &dst, double w)
+int Graph<T>::addEdge(const T &src, const T &dst)
 {
 	int edgeId = nextEdgeId;
 
-	if (!addEdge(edgeId, src, dst, w))
+	if (!addEdge(edgeId, src, dst))
 	{
 		return -1;
 	}
@@ -195,7 +182,7 @@ int Graph<T>::addEdge(const T &src, const T &dst, double w)
 }
 
 template <class T>
-bool Graph<T>::addEdge(unsigned edgeId, const T &src, const T &dst, double w)
+bool Graph<T>::addEdge(unsigned edgeId, const T &src, const T &dst)
 {
 	typename vector<Vertex<T>*>::iterator it = vertices.begin();
 	typename vector<Vertex<T>*>::iterator ite = vertices.end();
@@ -228,7 +215,7 @@ bool Graph<T>::addEdge(unsigned edgeId, const T &src, const T &dst, double w)
 	}
 
 	vD->indegree++;
-	vS->addEdge(edgeId, vD, w);
+	vS->addEdge(edgeId, vD);
 	nextEdgeId = edgeId + 1;
 
 	return true;
@@ -353,7 +340,7 @@ bool Graph<T>::bfs(Vertex<T> *dst, vector<Vertex<T> *> &path) const
 
 		for (const Edge<T> &e : v1->adj)
 		{
-			if (e.dest->visited == false && e.weight > 0)
+			if (e.dest->visited == false)
 			{
 				e.dest->path = v1;
 				e.dest->visited = true;
