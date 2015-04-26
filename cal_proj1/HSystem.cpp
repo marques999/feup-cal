@@ -371,19 +371,19 @@ void HSystem::setVertexColor(unsigned vertexId, double roomTemperature) const
 		{
 			gv->setVertexColor(vertexId, "MAGENTA");
 		}
-		else if (roomTemperature < 15.0)
+		else if (roomTemperature <= 15.0)
 		{
 			gv->setVertexColor(vertexId, "BLUE");
 		}
-		else if (roomTemperature < 20.0)
+		else if (roomTemperature <= 20.0)
 		{
 			gv->setVertexColor(vertexId, "CYAN");
 		}
-		else if (roomTemperature < 25.0)
+		else if (roomTemperature <= 25.0)
 		{
 			gv->setVertexColor(vertexId, "YELLOW");
 		}
-		else if (roomTemperature < 30.0)
+		else if (roomTemperature <= 30.0)
 		{
 			gv->setVertexColor(vertexId, "ORANGE");
 		}
@@ -411,7 +411,7 @@ T readValue(const string& prompt)
 	string input;
 	T val = T();
 
-	cout << endl << prompt;
+	cout << prompt;
 	getline(cin, input);
 
 	if (cin.fail())
@@ -438,7 +438,7 @@ string readString(const string& prompt)
 {
 	string input;
 
-	cout << endl << prompt;
+	cout << prompt;
 	getline(cin, input);
 
 	if (cin.fail())
@@ -458,43 +458,72 @@ void HSystem::findBest(unsigned vertexId, double novaTemp)
 {
 	double currentWeight = 5.0;
 
-	int weightIndex = 0;
-
 	if (rooms.find(vertexId) == rooms.end())
 	{
 		return;
 	}
 
 	Vertex<Room>* targetRoom = g.getVertex(rooms.at(vertexId));
+	Vertex<Room>* boilerRoom = g.getVertex(rooms.at(0));
 
-	double tempAntes = targetRoom->info.getTemperature();
+	double TempAntes = targetRoom->info.getTemperature();
 	double QAntes = targetRoom->info.getCaudal();
-
 	double worstTemperature = 0.0;
+	double oldWorstTemperature = 0.0;
+	double boilerTemperature = rooms.at(0).getTemperature();
+	double bestWeight = currentWeight;
 
-	map<unsigned, double> bestPath;
-	map<unsigned, double> currentPath;
+	stack<pair<unsigned, double> > bestPath;
+	stack<pair<unsigned, double> > currentPath;
 
 	while (true)
 	{
-		double tempAdicional = calculateWaterTemperature(tempAntes, QAntes, novaTemp, currentWeight);
+		double TempAdicional = calculateWaterTemperature(TempAntes, QAntes, novaTemp, currentWeight);
+
+		oldWorstTemperature = worstTemperature;
+		worstTemperature = 0.0;
+		currentPath = dijkstra(targetRoom, TempAdicional, currentWeight, worstTemperature);
 		
-		currentPath = dijkstra(targetRoom, tempAdicional, currentWeight, worstTemperature);
+		if (currentPath.empty())
+		{
+			break;
+		}
+
+		if (worstTemperature < oldWorstTemperature)
+		{
+			bestPath = currentPath;
+			boilerTemperature = TempAdicional;
+			bestWeight = currentWeight;
+		}
+		
 		currentWeight += 5.0;
 	}
 
-	currentWeight -= 5.0;
+	boilerRoom->info.setTemperature(boilerTemperature);
 
-	vector<Vertex<Room>* > vertices = g.getVertices();
-
-	// escolhe mínimo das máximas variações
-
-	for (auto &v : vertices)
+	if (bestPath.top().first == 0)
 	{
-		// altera caudal das divisões atravessadas
+		bestPath.pop();
 	}
 
-	updateGraphViewer();
+	while (!bestPath.empty())
+	{
+		pair<unsigned, double> currentPosition = bestPath.top();
+		
+		bestPath.pop();
+
+		Vertex<Room>* currentRoom = g.getVertex(rooms.at(currentPosition.first));
+
+		currentRoom->info.setCaudal(currentRoom->info.getCaudal() + bestWeight);
+		currentRoom->info.setTemperature(currentPosition.second);
+		changeTemperatureGraphViewer(currentRoom);
+	
+		if (currentRoom->info.getCaudal() >= 100.0)
+		{
+			currentRoom->info.disable();
+			disableRoomGraphViewer(currentRoom->id);
+		}
+	}	
 
 	UI::DisplayMessage("INFORMATION: room temperature successfully changed to match target.");
 }
@@ -504,53 +533,48 @@ const string promptTargetTemperature = "Enter target room temperature: ";
 
 void HSystem::findBestMenu()
 {
-	string targetName = readString(promptTargetRoom);
-	Vertex<Room>* targetRoom = getRoom(targetName);
+	string roomName = readString(promptTargetRoom);
+	Vertex<Room>* targetRoom = getRoom(roomName);
 
-	if (targetRoom == nullptr)
-	{
-		throw TargetRoomNotFound(targetName);
-	}
-
-	if (targetRoom->id == 0)
-	{
-		throw BoilerNoConnections();
-	}
-
-	double novaTemp = readValue<double>(promptTargetTemperature);
-
-	if (!validateTemperature(novaTemp))
+	if (roomName == "")
 	{
 		throw InvalidParameter();
 	}
 
-	double tempAntes = targetRoom->info.getTemperature();
-	double QAntes = targetRoom->info.getCaudal();
-	double tempAdicional = calculateWaterTemperature(tempAntes, QAntes, novaTemp, 15);
-	double delta = 0.0;
-
-	cout << "Temperatura adicional: " << tempAdicional << endl;
-	dijkstra(targetRoom, tempAdicional, 15, delta);
-
-	//findBest(targetRoom->id, targetTemperature);
-
-	cout << "pior diferenca: " << delta << endl;
-	UI::PauseConsole();
-
-}
-
-void HSystem::updateGraphViewer()
-{
-	vector<Vertex<Room> *> vertices = g.getVertices();
-
-	for (auto &v : vertices)
+	if (targetRoom == nullptr)
 	{
-		if (rooms.find(v->id) != rooms.end())
+		throw TargetRoomNotFound(roomName);
+	}
+
+	if (targetRoom->id == 0)
+	{
+		UI::DisplayMessage(radiatorIsBoiler);
+	}
+	else
+	{
+		double novaTemp = readValue<double>(promptTargetTemperature);
+
+		if (!validateTemperature(novaTemp))
 		{
-			rooms[v->id].setCaudal(v->info.getCaudal());
-			rooms[v->id].setTemperature(v->info.getTemperature());
-			changeTemperatureGraphViewer(v);
+			throw InvalidParameter();
 		}
+
+		double tempAntes = targetRoom->info.getTemperature();
+		double QAntes = targetRoom->info.getCaudal();
+		double tempAdicional = calculateWaterTemperature(tempAntes, QAntes, novaTemp, 15);
+		double delta = 0.0;
+
+		cout << "Temperatura adicional: " << tempAdicional << endl;
+		dijkstra(targetRoom, tempAdicional, 15, delta);
+		UI::PauseConsole();
+		delta = 0.0;
+		dijkstra(targetRoom, tempAdicional, 10, delta);
+		UI::PauseConsole();
+		delta = 0.0;
+		dijkstra(targetRoom, tempAdicional, 5, delta);
+		//findBest(targetRoom->id, targetTemperature);
+
+		UI::PauseConsole();
 	}
 }
 
@@ -567,6 +591,12 @@ void HSystem::loadGraph()
 		{
 			foundFiles.push_back(dentry->d_name);
 		}
+	}
+
+	if (foundFiles.empty())
+	{
+		UI::DisplayMessage("ERROR: no saved graphs found in the current directory.");
+		return;
 	}
 
 	while (true)
@@ -633,11 +663,17 @@ void HSystem::loadGraph()
 
 void HSystem::saveGraph() const
 {
+	ifstream in;
 	string graphFilename;
 	char userChoice;
-	ifstream in;
 
 	graphFilename = readString(promptFilename);
+
+	if (graphFilename == "")
+	{
+		throw InvalidParameter();
+	}
+
 	graphFilename += ".graph";
 	in.open(graphFilename);
 
@@ -658,7 +694,12 @@ void HSystem::saveGraph() const
 
 void HSystem::addRoom()
 {
-	string roomName = readString(promptSourceName);
+	string roomName = readString(promptSourceName); // trim!
+
+	if (roomName == "")
+	{
+		throw InvalidParameter();
+	}
 
 	if (getRoom(roomName) != nullptr)
 	{
@@ -706,6 +747,10 @@ void HSystem::removeRoom()
 {
 	string roomName = readString(promptRoomName);
 
+	if (roomName == "")
+	{
+		throw InvalidParameter();
+	}
 	if (getRoom(roomName) == nullptr)
 	{
 		throw SourceRoomNotFound(roomName);
@@ -743,6 +788,11 @@ void HSystem::disableRoom()
 	string roomName = readString(promptRoomDisable);
 	Vertex<Room>* selectedRoom = getRoom(roomName);
 
+	if (roomName == "")
+	{
+		throw InvalidParameter();
+	}
+
 	if (selectedRoom == nullptr)
 	{
 		throw SourceRoomNotFound(roomName);
@@ -771,6 +821,11 @@ void HSystem::enableRoom()
 {
 	string roomName = readString(promptRoomEnable);
 	Vertex<Room>* selectedRoom = getRoom(roomName);
+
+	if (roomName == "")
+	{
+		throw InvalidParameter();
+	}
 
 	if (selectedRoom == nullptr)
 	{
@@ -808,6 +863,11 @@ void HSystem::changeTemperature()
 	string roomName = readString(promptRoomName);
 	Vertex<Room>* selectedRoom = getRoom(roomName);
 
+	if (roomName == "")
+	{
+		throw InvalidParameter();
+	}
+
 	if (selectedRoom == nullptr)
 	{
 		throw SourceRoomNotFound(roomName);
@@ -837,6 +897,11 @@ void HSystem::addConnection()
 	string srcName = readString(promptSourceName);
 	Vertex<Room>* srcRoom = getRoom(srcName);
 
+	if (srcName == "")
+	{
+		throw InvalidParameter();
+	}
+
 	if (srcRoom == nullptr)
 	{
 		throw SourceRoomNotFound(srcName);
@@ -844,6 +909,11 @@ void HSystem::addConnection()
 
 	string dstName = readString(promptDestinationName);
 	Vertex<Room>* dstRoom = getRoom(dstName);
+
+	if (dstName == "")
+	{
+		throw InvalidParameter();
+	}
 
 	if (dstRoom == nullptr)
 	{
@@ -892,6 +962,11 @@ void HSystem::removeConnection()
 	string srcName = readString(promptSourceName);
 	Vertex<Room>* srcRoom = getRoom(srcName);
 
+	if (srcName == "")
+	{
+		throw InvalidParameter();
+	}
+
 	if (srcRoom == nullptr)
 	{
 		throw SourceRoomNotFound(srcName);
@@ -899,6 +974,11 @@ void HSystem::removeConnection()
 
 	string dstName = readString(promptDestinationName);
 	Vertex<Room>* dstRoom = getRoom(dstName);
+
+	if (dstName == "")
+	{
+		throw InvalidParameter();
+	}
 
 	if (dstRoom == nullptr)
 	{
@@ -1131,7 +1211,16 @@ void HSystem::changeTemperatureGraphViewer(Vertex<Room>* &room)
 	{
 		rooms[room->id].setTemperature(room->info.getTemperature());
 		gv->setVertexLabel(room->id, formatRoom(room->info));
-		setVertexColor(room->id, room->info.getTemperature());
+
+		if (room->info.isEnabled())
+		{
+			setVertexColor(room->id, room->info.getTemperature());
+		}
+		else
+		{
+			gv->setVertexColor(room->id, "DARK_GRAY");
+		}
+
 		gv->rearrange();
 	}
 }
@@ -1210,7 +1299,6 @@ bool HSystem::validateTemperature(double temperature) const
 	return (temperature >= minimumTemperature && temperature <= maximumTemperature);
 }
 
-// FUNÇÂO COST
 double HSystem::calculateRoomTemperature(double TempAntes, double QAntes, double TempAdicional, double QAdicional) const
 {
 	return (TempAntes * QAntes + TempAdicional * QAdicional) / (QAntes + QAdicional);
@@ -1221,9 +1309,12 @@ double HSystem::calculateWaterTemperature(double TempAntes, double QAntes, doubl
 	return (QAntes * TempAntes - NovaTemp * QAntes - NovaTemp * QAdicional) / -QAdicional;
 }
 
-map<unsigned, double> HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional, double QAdicional, double &worstTemperature) ////////
+#undef max
+
+stack<pair<unsigned, double> > HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional, double QAdicional, double &worstTemperature) ////////
 {
-	map<unsigned, double> res;
+	map<unsigned, double> temperatures;
+	stack<pair<unsigned, double> > res;
 	queue<Vertex<Room>* > q;
 
 	if (!g.isDAG())
@@ -1238,12 +1329,11 @@ map<unsigned, double> HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional
 	{
 		return res;
 	}
-	
+
 	Vertex<Room>* boilerRoom = g.getVertex(rooms.at(0));
 
-	boilerRoom->dist = 100.0,
+	boilerRoom->dist = 100.0;
 	q.push(boilerRoom);
-	
 
 	while (!q.empty())
 	{
@@ -1252,8 +1342,7 @@ map<unsigned, double> HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional
 		q.pop();
 
 		cout << "Visitou vertice " << v->id << endl;
-#undef max
-	
+
 		for (const Edge<Room> &e : v->adj)
 		{
 			Vertex<Room>* w = e.dest;
@@ -1263,21 +1352,16 @@ map<unsigned, double> HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional
 			double tempAntes = w->info.getTemperature();
 			double QAntes = w->info.getCaudal();
 			double novaTemp = calculateRoomTemperature(tempAntes, QAntes, tempAdicional, QAdicional);
-			
-			cout << "Nova temepratura para o vertice " << w->id << ": " << novaTemp << endl;
-			
 			double deltaTemperatura = abs(tempAntes - novaTemp);
-			
-			if (deltaTemperatura < w->dist)
-			{
-				if (deltaTemperatura > worstTemperature)
-				{
-					worstTemperature = deltaTemperatura;
-				}
 
-				cout << "nova variacao minima ! " << deltaTemperatura << endl;
+			cout << "Room " << w->id << "Temperature  : " << novaTemp << endl;
+
+			if (QAntes + QAdicional <= 100.0 && deltaTemperatura < w->dist)
+			{
+				cout << "Room " << w->id << " Delta : " << deltaTemperatura << endl;
+				temperatures[w->id] = novaTemp;
+			//	w->info.setCaudal(QAntes + QAdicional);
 				w->dist = deltaTemperatura;
-				res[w->id] = novaTemp;
 				w->path = v;
 			}
 
@@ -1287,8 +1371,25 @@ map<unsigned, double> HSystem::dijkstra(Vertex<Room>* &dst, double tempAdicional
 			}
 		}
 	}
-	
+
 	g.resetIndegrees();
+
+	for (Vertex<Room>* v = dst; v != nullptr; v = v->path)
+	{
+		double newTemperature = temperatures[v->id];
+
+		if (v->id != 0 && v->id != dst->id)
+		{
+			if (v->dist > worstTemperature)
+			{
+				worstTemperature = v->dist;
+			}
+		}
+
+		res.push(make_pair(v->id, newTemperature));
+	}
+
+	cout << "Worst Delta : " << worstTemperature << endl;
 
 	return res;
 }
