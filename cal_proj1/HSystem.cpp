@@ -1398,6 +1398,18 @@ stack<pair<unsigned, double> > HSystem::dijkstra(Vertex<Room>* &dst, double temp
 			{
 				cout << "Room " << w->id << " Caudal : " << QAntes + QAdicional << endl;
 				temperatures[w->id] = novaTemp;
+
+				if (w->info.isEnabled())
+				{
+					w->dist = deltaTemperatura;
+					w->path = v;
+				}
+				else
+				{
+					w->dist = 0.0;
+					w->path = v;
+				}
+			
 			//	w->info.setCaudal(QAntes + QAdicional);
 				w->dist = deltaTemperatura;
 				w->path = v;
