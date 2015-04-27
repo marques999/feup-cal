@@ -538,6 +538,12 @@ void HSystem::findBest(unsigned vertexId, double novaTemp)
 		currentRoom->info.setTemperature(currentPosition.second);
 		changeTemperatureGraphViewer(currentRoom);
 	
+		if (currentRoom->info.isEnabled()){
+			currentRoom->info.setCaudal(currentRoom->info.getCaudal() + bestWeight);
+			currentRoom->info.setTemperature(currentPosition.second);
+			changeTemperatureGraphViewer(currentRoom);
+		}
+
 		if (currentRoom->info.getCaudal() >= 100.0)
 		{
 			currentRoom->info.disable();
