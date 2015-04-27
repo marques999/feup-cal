@@ -1322,7 +1322,10 @@ bool HSystem::validateTemperature(double temperature) const
 
 double HSystem::calculateRoomTemperature(double TempAntes, double QAntes, double TempAdicional, double QAdicional) const
 {
-	return (TempAntes * QAntes + TempAdicional * QAdicional) / (QAntes + QAdicional);
+	if (QAdicional < 0)
+		return TempAntes;
+	else
+		return (TempAntes * QAntes + TempAdicional * QAdicional) / (QAntes + QAdicional);
 }
 
 double HSystem::calculateWaterTemperature(double TempAntes, double QAntes, double NovaTemp, double QAdicional) const
@@ -1356,6 +1359,7 @@ stack<pair<unsigned, double> > HSystem::dijkstra(Vertex<Room>* &dst, double temp
 	boilerRoom->dist = 100.0;
 	q.push(boilerRoom);
 
+
 	while (!q.empty())
 	{
 		Vertex<Room>* v = q.front();
@@ -1375,7 +1379,14 @@ stack<pair<unsigned, double> > HSystem::dijkstra(Vertex<Room>* &dst, double temp
 			double novaTemp = calculateRoomTemperature(tempAntes, QAntes, tempAdicional, QAdicional);
 			double deltaTemperatura = abs(tempAntes - novaTemp);
 
+		
+
 			cout << "Room " << w->id << "Temperature  : " << novaTemp << endl;
+
+			if (novaTemp == tempAntes){
+				throw InvalidParameter();
+		
+			}
 
 			if (QAntes + QAdicional <= 100.0 && deltaTemperatura < w->dist)
 			{
