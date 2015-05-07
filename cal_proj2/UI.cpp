@@ -14,8 +14,8 @@
 
 const char* boxTop = "ษอออออออออออออออออออออออออออออออออออออออออป";
 const char* boxBottom = "ศอออออออออออออออออออออออออออออออออออออออออผ";
-const char* tableTop = "ษอออออออออออออออออออออออออออออออออออออออออออออออออป";
-const char* tableBottom = "ศอออออออออออออออออออออออออออออออออออออออออออออออออผ";
+const char* tableTop =		 "ษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป";
+const char* tableBottom =	 "ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ";
 const char* paddingLeft = "                  บ ";
 
 namespace UI
@@ -127,6 +127,7 @@ namespace UI
 		}
 
 		UI::Display(tableTop);
+		UI::Display(ss.str().c_str());
 		UI::Display(tableBottom);
 	}
 

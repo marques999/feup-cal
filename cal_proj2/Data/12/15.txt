@@ -1,11 +1,33 @@
-Rua da Costa, Campo
-Travessa da Costa, Campo
-Rua da Retorta, Campo
-Rua dos Urreiros, Campo
-Rua 25 de Abril, Campo
-Avenida 5 de Outubro, Valongo
-Rua Oliveira Zina, Valongo
-Praça Machado dos Santos, Valongo
-Rua da Passagem, Valongo
-Rua da Ilha, Valongo
-Rua das Descobertas, Valongo
+Rua da Costa
+Campo
+4440-049
+Travessa da Costa
+Campo
+4440-049
+Rua da Retorta
+Campo
+4440-049
+Rua dos Urreiros
+Campo
+4440-049
+Rua 25 de Abril
+Campo
+4440-049
+Avenida 5 de Outubro
+Valongo
+4440-049
+Rua Oliveira Zina
+Valongo
+4440-049
+Praça Machado dos Santos
+Valongo
+4440-049
+Rua da Passagem
+Valongo
+4440-049
+Rua da Ilha
+Valongo
+4440-049
+Rua das Descobertas
+Valongo
+4440-049

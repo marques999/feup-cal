@@ -59,7 +59,7 @@ namespace UI
 	* @return returns a string containing the formatted value
 	*/
 	string Format(unsigned n, unsigned w);
-
+	void DisplayTable(int c, const vector<string> &labels, const int length[]);
 	void DisplayTableRow(int c, const vector<string> &labels, const int length[]);
 }
 

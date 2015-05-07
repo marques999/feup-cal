@@ -58,6 +58,50 @@ bool GPS::readConcelhos(unsigned vectorIndex)
 	return true;
 }
 
+bool GPS::readRuas(unsigned vectorIndex)
+{
+	ifstream in;
+	Rua currentEntry;
+
+	char ruasFilename[128];
+
+	sprintf_s(ruasFilename, "Data/%d/%d.txt", distrito, vectorIndex);
+	in.open(ruasFilename);
+
+	if (!in.is_open() || in.eof() || in.bad())
+	{
+		return false;
+	}
+
+	while (!in.eof())
+	{
+		getline(in, currentEntry.nome);
+
+		if (currentEntry.nome.empty())
+		{
+			break;
+		}
+
+		getline(in, currentEntry.localidade);
+
+		if (currentEntry.nome.empty())
+		{
+			break;
+		}
+
+		getline(in, currentEntry.codPostal);
+
+		if (currentEntry.nome.empty())
+		{
+			break;
+		}
+
+		ruas.push_back(currentEntry);
+	}
+
+	return true;
+}
+
 bool GPS::readDistritos()
 {
 	ifstream in;
@@ -220,6 +264,8 @@ void GPS::GUIConcelho()
 			//	throw InvalidParameter();
 		}
 	}
+
+	GUIRua();
 }
 
 
@@ -272,10 +318,21 @@ unsigned GPS::seleccionarConcelho(const string &s)
 
 void GPS::GUIRua()
 {
-	// ler ruas
+	if (concelho == -1)
+	{
+		return;
+	}
+
+	UI::ClearConsole();
+	UI::DisplayFrame("SELECCIONAR RUA");
+	readRuas(concelho);
+
+	vector<string> tableLabel = { " Nome", " Localidade", " Codigo" };
 
 	const int rowCount = 3;
-	const int tableLength[rowCount] = { 24, 12, 8 };
+	const int tableLength[rowCount] = { 36, 12, 10 };
+
+	UI::DisplayTable(rowCount, tableLabel, tableLength);
 
 	for (const Rua &r : ruas)
 	{
@@ -287,8 +344,6 @@ void GPS::GUIRua()
 
 		UI::DisplayTableRow(rowCount, tableRow, tableLength);
 	}
-
-	UI::PauseConsole();
 }
 
 //allow page down!
@@ -357,7 +412,7 @@ unsigned GPS::GUISelectAux(const vector<string> &v, const string &s, const char*
 		{
 			if (c == 0x0d || c == 0x0a)
 			{
-				return vectorIndex;
+				return index(v, previousMatches[vectorIndex]);
 			}
 
 			if (c == 0x1b)
@@ -371,7 +426,7 @@ unsigned GPS::GUISelectAux(const vector<string> &v, const string &s, const char*
 string GPS::GUISelect(const vector<string> &v, const char* prompt)
 {
 	setEcho(false);
-	string passwd;
+	string userInput;
 
 	char c;
 
@@ -379,9 +434,9 @@ string GPS::GUISelect(const vector<string> &v, const char* prompt)
 	{
 		UI::ClearConsole();
 		UI::DisplayFrame(prompt);
-		printf("                Pesquisar: %s\xdb\n\n", passwd.c_str());
+		printf("                Pesquisar: %s\xdb\n\n", userInput.c_str());
 
-		vector<string> index = findMatch(v, passwd);
+		vector<string> index = findMatch(v, userInput);
 
 		if (!index.empty())
 		{
@@ -400,10 +455,10 @@ string GPS::GUISelect(const vector<string> &v, const char* prompt)
 		}
 		case '\b':
 		{
-			if (passwd.size() > 0)
+			if (userInput.size() > 0)
 			{
-				cout << "\b \b";
-				passwd.pop_back();
+				printf("\b \b");
+				userInput.pop_back();
 			}
 			break;
 		}
@@ -412,13 +467,13 @@ string GPS::GUISelect(const vector<string> &v, const char* prompt)
 		{
 			if (c >= 32 && c <= 255)
 			{
-				passwd.push_back(c);
-				cout << c;
+				userInput.push_back(c);
+				putc(c, stdout);
 			}
 			break;
 		}
 		}
 	} while (c != '\r');
 
-	return passwd;
+	return userInput;
 }

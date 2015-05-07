@@ -71,6 +71,28 @@ size_t KMPSearch(const string &text, const string &pattern)
 
 #define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 
+bool compareChars(char a, char b)
+{
+	if (a >= 32 && a <= 127)
+	{
+		return toupper(a) == toupper(b);
+	}
+
+	switch (a)
+	{
+	case '\xc6': case '\xc7': case '\xb5': case '\xa0':
+		return 'A' == toupper(b);
+	case '\x82': case '\x88': case '\x90': case '\xd2':
+		return 'E' == toupper(b);
+	case '\xa2': case '\xe0': case '\xe4': case '\xe5':
+		return 'O' == toupper(b);
+	case '\x80': case '\x87':
+		return 'C' == toupper(b);
+	}
+
+	return false;
+}
+
 unsigned LevenshteinDistance(const string& s1, const string& s2)
 {
 	const size_t len1 = s1.size();
@@ -91,7 +113,7 @@ unsigned LevenshteinDistance(const string& s1, const string& s2)
 
 		for (size_t j = 0; j < len2; j++)
 		{
-			col[j + 1] = MIN3(prevCol[1 + j] + 1, col[j] + 1, prevCol[j] + ( toupper(s1[i]) == toupper(s2[j]) ? 0 : 1));
+			col[j + 1] = MIN3(prevCol[1 + j] + 1, col[j] + 1, prevCol[j] + (compareChars(s1[i], s2[i]) ? 0 : 1));
 		}
 
 		col.swap(prevCol);
