@@ -16,7 +16,15 @@
 
 GPS::GPS()
 {
-	readDistritos();
+	try
+	{
+		readDistritos();
+	}
+	catch (FileIOException &e)
+	{
+		UI::DisplayMessage(e.str());
+	}
+
 	distrito = -1;
 	concelho = -1;
 	rua = -1;
