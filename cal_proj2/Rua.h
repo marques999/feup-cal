@@ -20,11 +20,6 @@ struct Rua
 	string nome;
 	string localidade;
 	string codPostal;
-
-	void read(ifstream &in)
-	{
-
-	}
 };
 
-#endif __RUA_H_
+#endif /* __RUA_H_ */

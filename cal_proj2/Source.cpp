@@ -12,12 +12,24 @@
 
 #include "Common.h"
 #include "GPS.h"
+#include "UI.h"
 
 int main()
 {
 	GPS gps = GPS::instance();
 
-	gps.GUIDistrito();
+	try
+	{
+		gps.GUIMenu();
+	}
+	catch (CustomException &e)
+	{
+		UI::DisplayMessage(e.str());
+	}
+	catch (MessageException &e)
+	{
+		UI::DisplayMessage(e.str());
+	}
 
 	return 0;
 }

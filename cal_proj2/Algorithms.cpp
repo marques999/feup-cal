@@ -1,3 +1,15 @@
+/*!
+ * \file Algorithms.cpp
+ *
+ * FEUP_CAL1415_2MIEIC01_D
+ * \author Diogo Marques
+ * \author Jose Taveira
+ * \author Vitor Esteves
+ *
+ * \date Maio 2015
+ *
+ */
+
 #include "Algorithms.h"
 
 static vector<int> KMPTable(const string &pattern)
@@ -135,9 +147,9 @@ int LongestCommonSubstring(const string& str1, const string& str2)
 
 	size_t maxSubstr = 0;
 
-	for (int i = 0; i < str1.size(); ++i)
+	for (size_t i = 0; i < str1.size(); ++i)
 	{
-		for (int j = 0; j < str2.size(); ++j)
+		for (size_t j = 0; j < str2.size(); ++j)
 		{
 			if (str1[i] != str2[j])
 			{
