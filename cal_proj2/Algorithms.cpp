@@ -16,8 +16,8 @@ static vector<int> KMPTable(const string &pattern)
 {
 	vector<int> lps(pattern.size());
 
-	size_t len = 0;
-	size_t i = 1;
+	unsigned len = 0;
+	unsigned i = 1;
 
 	lps[0] = 0;
 
@@ -43,12 +43,12 @@ static vector<int> KMPTable(const string &pattern)
 	return lps;
 }
 
-size_t KMPSearch(const string &text, const string &pattern)
+unsigned KMPSearch(const string &text, const string &pattern)
 {
-	size_t M = pattern.size();
-	size_t N = text.size();
-	size_t i = 0; // index for text[]
-	size_t j = 0; // index for pattern[]
+	unsigned M = pattern.size();
+	unsigned N = text.size();
+	unsigned i = 0;
+	unsigned j = 0;
 
 	vector<int> lps = KMPTable(pattern);
 
@@ -107,23 +107,23 @@ bool compareChars(char a, char b)
 
 unsigned LevenshteinDistance(const string& s1, const string& s2)
 {
-	const size_t len1 = s1.size();
-	const size_t len2 = s2.size();
-	const size_t mlen = min(len1, len2 + 1);
+	const unsigned len1 = s1.size();
+	const unsigned len2 = s2.size();
+	const unsigned mlen = min(len1, len2 + 1);
 
-	vector<size_t> col(len2 + 1);
-	vector<size_t> prevCol(len2 + 1);
+	vector<unsigned> col(len2 + 1);
+	vector<unsigned> prevCol(len2 + 1);
 
-	for (size_t i = 0; i < prevCol.size(); i++)
+	for (unsigned i = 0; i < prevCol.size(); i++)
 	{
 		prevCol[i] = i;
 	}
 
-	for (size_t i = 0; i < mlen; i++)
+	for (unsigned i = 0; i < mlen; i++)
 	{
 		col[0] = i + 1;
 
-		for (size_t j = 0; j < len2; j++)
+		for (unsigned j = 0; j < len2; j++)
 		{
 			col[j + 1] = MIN3(prevCol[1 + j] + 1, col[j] + 1, prevCol[j] + (compareChars(s1[i], s2[i]) ? 0 : 1));
 		}
@@ -134,24 +134,24 @@ unsigned LevenshteinDistance(const string& s1, const string& s2)
 	return prevCol[len2];
 }
 
-int LongestCommonSubstring(const string& str1, const string& str2)
+int LongestCommonSubstring(const string& s1, const string& s2)
 {
-	if (str1.empty() || str2.empty())
+	if (s1.empty() || s2.empty())
 	{
 		return 0;
 	}
 
-	vector<size_t> curr(str2.size());
-	vector<size_t> prev(str1.size());
-	vector<size_t> swap;
+	vector<unsigned> curr(s2.size());
+	vector<unsigned> prev(s1.size());
+	vector<unsigned> swap;
 
-	size_t maxSubstr = 0;
+	unsigned maxSubstr = 0;
 
-	for (size_t i = 0; i < str1.size(); ++i)
+	for (unsigned i = 0; i < s1.size(); ++i)
 	{
-		for (size_t j = 0; j < str2.size(); ++j)
+		for (unsigned j = 0; j < s2.size(); ++j)
 		{
-			if (str1[i] != str2[j])
+			if (s1[i] != s2[j])
 			{
 				curr[j] = 0;
 			}
