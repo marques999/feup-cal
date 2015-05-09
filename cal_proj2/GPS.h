@@ -13,7 +13,6 @@
 #ifndef __GPS_H_
 #define __GPS_H_
 
-#include "Common.h"
 #include "Rua.h"
 
 class GPS

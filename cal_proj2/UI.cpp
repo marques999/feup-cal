@@ -20,11 +20,6 @@ const char* paddingLeft = "                  บ ";
 
 namespace UI
 {
-	void Display(const char* s)
-	{
-		printf("%*s\n", 40 + (strlen(s) / 2), s);
-	}
-
 	void DisplayBox(const vector<string> &v, size_t beginIndex)
 	{
 		UI::Display(boxTop);
@@ -38,60 +33,6 @@ namespace UI
 		}
 
 		UI::Display(boxBottom);
-	}
-
-	void ClearConsole()
-	{
-		system("cls");
-	}
-
-	template <typename T>
-	static T readValue(const string& prompt)
-	{
-		string input;
-		T val = T();
-
-		cout << prompt;
-		getline(cin, input);
-
-		if (cin.fail())
-		{
-			cin.clear();
-
-			if (!cin.eof())
-			{
-				throw InvalidParameter();
-			}
-		}
-
-		stringstream ss(input);
-
-		if (!(ss >> val) || ss.rdbuf()->in_avail() != 0)
-		{
-			throw InvalidParameter();
-		}
-
-		return val;
-	}
-
-	static string readString(const string& prompt)
-	{
-		string input;
-
-		cout << prompt;
-		getline(cin, input);
-
-		if (cin.fail())
-		{
-			cin.clear();
-
-			if (!cin.eof())
-			{
-				throw InvalidParameter();
-			}
-		}
-
-		return input;
 	}
 
 	void DisplayTable(int c, const vector<string> &labels, const int length[])
@@ -172,36 +113,5 @@ namespace UI
 		}
 
 		printf("บ\n\t\tศอออออออออออออออออออออออออออออออออออออออออออออออผ\n\n");
-	}
-
-	void DisplayMessage(const string &msg)
-	{
-		cout << "\n" << msg << "\n" << "Press any key to continue...";
-		cin.get();
-		cin.clear();
-
-		if (cin.rdbuf()->in_avail() != 0)
-		{
-			cin.ignore(numeric_limits<streamsize>::max(), '\n');
-		}
-	}
-
-	void PauseConsole()
-	{
-		printf("Press any key to continue...");
-		cin.get();
-		cin.clear();
-
-		if (cin.rdbuf()->in_avail() != 0)
-		{
-			cin.ignore(numeric_limits<streamsize>::max(), '\n');
-		}
-	}
-
-	string Format(unsigned n, unsigned w)
-	{
-		ostringstream os;
-		os << setw(w) << right << fixed << n;
-		return os.str();
 	}
 }
