@@ -13,7 +13,9 @@
 #ifndef __GPS_H_
 #define __GPS_H_
 
+#include "Algorithms.h"
 #include "Rua.h"
+#include "UI.h"
 
 class GPS
 {

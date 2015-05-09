@@ -11,7 +11,6 @@
  */
 
 #include "GPS.h"
-#include "UI.h"
 
 int main()
 {

@@ -11,8 +11,6 @@
  */
 
 #include "GPS.h"
-#include "UI.h"
-#include "Algorithms.h"
 
 GPS::GPS()
 {
