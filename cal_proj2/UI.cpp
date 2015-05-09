@@ -25,13 +25,14 @@ namespace UI
 		printf("%*s\n", 40 + (strlen(s) / 2), s);
 	}
 
-	void DisplayBox(const vector<string> &v)
+	void DisplayBox(const vector<string> &v, size_t beginIndex)
 	{
 		UI::Display(boxTop);
 
-		size_t maximumIndex = v.size() < 10 ? v.size() : 10;
+		size_t numberEntries = v.size() - beginIndex;
+		size_t maximumIndex = numberEntries < 10 ? beginIndex + numberEntries : beginIndex + 10;
 
-		for (size_t i = 0; i < maximumIndex; i++)
+		for (size_t i = beginIndex; i < maximumIndex; i++)
 		{
 			printf("%s%-40sº\n", paddingLeft, v[i].c_str());
 		}

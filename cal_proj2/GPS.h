@@ -31,11 +31,14 @@ private:
 	void GUIConcelho();
 	void GUIDistrito();
 	void GUIRua();
-	void GUITable();
-
-	string GUISelectRua();
-	string GUISelect(const vector<string> &v, const char* prompt);
-
+	void GUITable(const vector<Rua> &v);
+	void GUIInfo() const;
+	bool GUISelectRua(string &userInput);
+	bool GUISelect(const vector<string> &v, string &userInput, const char* prompt);
+	void GUINavigate(unsigned &vectorIndex, unsigned vectorSize) const;
+	void GUISwitchPage(unsigned &vectorIndex, unsigned vectorSize) const;
+	void GUIInsertChar(string &userInput, char c, unsigned &vectorIndex) const;
+	void GUIRemoveChar(string &userInput, unsigned &vectorIndex) const;
 	unsigned GUISelectAux(const vector<string> &v, const string &s, const char* prompt);
 
 	vector<string> findMatch(const vector<string> &v, const string &s);

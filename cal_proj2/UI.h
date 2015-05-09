@@ -48,7 +48,7 @@ namespace UI
 	 * @brief displays vector contents as a list inside a rectangular box
 	 * @param v a vector of strings containing the elements to be displayed
 	 */
-	void DisplayBox(const vector<string> &v);
+	void DisplayBox(const vector<string> &v, size_t begin);
 
 	/**
 	* @brief displays a brief error or informative message

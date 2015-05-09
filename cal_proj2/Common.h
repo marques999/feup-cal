@@ -15,7 +15,6 @@
 
 #include <conio.h>
 #include <cstdlib>
-#include <ctime>
 #include <algorithm>
 #include <fstream>
 #include <functional>
@@ -23,7 +22,6 @@
 #include <iomanip>
 #include <map>
 #include <sstream>
-#include <stack>
 #include <string>
 #include <vector>
 

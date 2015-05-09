@@ -41,6 +41,27 @@ void GPS::GUIMenu()
 	GUIDistrito();
 }
 
+void GPS::GUIInfo() const
+{
+	if (distrito == -1 || concelho == -1 || rua == -1)
+	{
+		return;
+	}
+
+	UI::ClearConsole();
+	UI::DisplayFrame("DETALHES DA MORADA");
+
+	vector<string> detalhesMorada;
+
+	detalhesMorada.push_back(ruas[rua].nome);
+	detalhesMorada.push_back(ruas[rua].codPostal + '\t' + ruas[rua].localidade);
+	detalhesMorada.push_back("Concelho: " + concelhos[concelho]);
+	detalhesMorada.push_back("Distrito: " + distritos[distrito]);
+
+	UI::DisplayBox(detalhesMorada, 0);
+	UI::PauseConsole();
+}
+
 bool GPS::readConcelhos(unsigned vectorIndex)
 {
 	ifstream in;
@@ -210,67 +231,26 @@ vector<Rua> GPS::findMatch(const vector<Rua> &v, const string &s)
 	return matchVector;
 }
 
-void GPS::GUITable()
+void GPS::GUITable(const vector<Rua> &v)
 {
 	vector<string> tableLabel = { " Nome", " Localidade", " Codigo" };
 
-	const int rowCount = 3;
-	const int tableLength[rowCount] = { 36, 12, 10 };
+	const unsigned columnCount = 3;
+	const unsigned rowCount = v.size() < 10 ? v.size() : 10;
+	const int tableLength[columnCount] = { 36, 12, 10 };
 
-	UI::DisplayTable(rowCount, tableLabel, tableLength);
+	UI::DisplayTable(columnCount, tableLabel, tableLength);
 
-	for (const Rua &r : ruas)
+	for (unsigned i = 0; i < rowCount; i++)
 	{
-		vector<string> tableRow(rowCount);
+		vector<string> tableRow(columnCount);
 
-		tableRow[0] = r.nome;
-		tableRow[1] = r.localidade;
-		tableRow[2] = r.codPostal;
+		tableRow[0] = v[i].nome;
+		tableRow[1] = v[i].localidade;
+		tableRow[2] = v[i].codPostal;
 
-		UI::DisplayTableRow(rowCount, tableRow, tableLength);
+		UI::DisplayTableRow(columnCount, tableRow, tableLength);
 	}
-}
-
-#include <Windows.h>
-
-void setEcho(bool enable)
-{
-#ifdef WIN32
-
-	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-	DWORD mode;
-
-	GetConsoleMode(hStdin, &mode);
-
-	if (!enable)
-	{
-		mode &= ~ENABLE_ECHO_INPUT;
-	}
-	else
-	{
-		mode |= ENABLE_ECHO_INPUT;
-	}
-
-	SetConsoleMode(hStdin, mode);
-
-#else
-
-	struct termios tty;
-
-	tcgetattr(STDIN_FILENO, &tty);
-
-	if (!enable)
-	{
-		tty.c_lflag &= ~ECHO;
-	}
-	else
-	{
-		tty.c_lflag |= ECHO;
-	}
-
-	(void) tcsetattr(STDIN_FILENO, TCSANOW, &tty);
-
-#endif
 }
 
 bool operator==(const Rua &r1, const Rua &r2)
@@ -326,11 +306,17 @@ void GPS::GUIConcelho()
 		return;
 	}
 
+	concelhos.clear();
 	readConcelhos(distrito);
 
 	while (true)
 	{
-		string concelhoEscolhido = GUISelect(concelhos, strSelecionarConcelho);
+		string concelhoEscolhido;
+
+		if (!GUISelect(concelhos, concelhoEscolhido, strSelecionarConcelho))
+		{
+			return;
+		}
 
 		if (!concelhoEscolhido.empty())
 		{
@@ -347,23 +333,22 @@ void GPS::GUIConcelho()
 
 			if (concelho != -1)
 			{
-				break;
+				GUIRua();
 			}
 		}
-		else
-		{
-			//	throw InvalidParameter();
-		}
 	}
-
-	GUIRua();
 }
 
 void GPS::GUIDistrito()
 {
 	while (true)
 	{
-		string distritoEscolhido = GUISelect(distritos, strSelecionarDistrito);
+		string distritoEscolhido;
+
+		if (!GUISelect(distritos, distritoEscolhido, strSelecionarDistrito))
+		{
+			return;
+		}
 
 		if (!distritoEscolhido.empty())
 		{
@@ -380,16 +365,10 @@ void GPS::GUIDistrito()
 
 			if (distrito != -1)
 			{
-				break;
+				GUIConcelho();
 			}
 		}
-		else
-		{
-			// throw
-		}
 	}
-
-	GUIConcelho();
 }
 
 // nome da rua, avenida ou praça deve começar pelo nome respetivo
@@ -425,11 +404,17 @@ void GPS::GUIRua()
 		return;
 	}
 
+	ruas.clear();
 	readRuas(concelho);
 
 	while (true)
 	{
-		string ruaEscolhida = GUISelectRua();
+		string ruaEscolhida;
+
+		if (!GUISelectRua(ruaEscolhida))
+		{
+			return;
+		}
 
 		if (!ruaEscolhida.empty())
 		{
@@ -437,26 +422,53 @@ void GPS::GUIRua()
 
 			if (vectorIndex == -1)
 			{
-				concelho = seleccionarRua(ruaEscolhida);
+				rua = seleccionarRua(ruaEscolhida);
 			}
 			else
 			{
-				concelho = vectorIndex;
+				rua = vectorIndex;
 			}
 
-			if (concelho != -1)
+			if (rua != -1)
 			{
-				break;
+				GUIInfo();
 			}
-		}
-		else
-		{
-			//	throw InvalidParameter();
 		}
 	}
 }
 
-//allow page down!
+void GPS::GUINavigate(unsigned &vectorIndex, unsigned vectorSize) const
+{
+	switch (_getch())
+	{
+	case 72:
+	{
+		if (vectorIndex > 0)
+		{
+			vectorIndex--;
+		}
+		else
+		{
+			vectorIndex = vectorSize - 1;
+		}
+
+		break;
+	}
+	case 80:
+	{
+		if (vectorIndex < vectorSize - 1)
+		{
+			vectorIndex++;
+		}
+		else
+		{
+			vectorIndex = 0;
+		}
+
+		break;
+	}
+	}
+}
 
 unsigned GPS::GUISelectAux(const vector<string> &v, const string &s, const char* prompt)
 {
@@ -488,35 +500,7 @@ unsigned GPS::GUISelectAux(const vector<string> &v, const string &s, const char*
 
 		if (c == 0xe0)
 		{
-			switch (_getch())
-			{
-			case 72:
-			{
-				if (vectorIndex > 0)
-				{
-					vectorIndex--;
-				}
-				else
-				{
-					vectorIndex = vectorSize - 1;
-				}
-
-				break;
-			}
-			case 80:
-			{
-				if (vectorIndex < vectorSize - 1)
-				{
-					vectorIndex++;
-				}
-				else
-				{
-					vectorIndex = 0;
-				}
-
-				break;
-			}
-			}
+			GUINavigate(vectorIndex, vectorSize);
 		}
 		else
 		{
@@ -533,23 +517,22 @@ unsigned GPS::GUISelectAux(const vector<string> &v, const string &s, const char*
 	}
 }
 
-string GPS::GUISelect(const vector<string> &v, const char* prompt)
+bool GPS::GUISelect(const vector<string> &v, string &s, const char* prompt)
 {
-	string userInput;
-
-	char c;
+	int c;
+	unsigned vectorIndex = 0;
 
 	do
 	{
+		vector<string> matchedVector = findMatch(v, s);
+
 		UI::ClearConsole();
 		UI::DisplayFrame(prompt);
-		printf(strSearchFormat, userInput.c_str());
+		printf(strSearchFormat, s.c_str());
 
-		vector<string> index = findMatch(v, userInput);
-
-		if (!index.empty())
+		if (!matchedVector.empty())
 		{
-			UI::DisplayBox(index);
+			UI::DisplayBox(matchedVector, vectorIndex);
 		}
 
 		UI::DisplayFrame(strNavigationBar);
@@ -558,52 +541,42 @@ string GPS::GUISelect(const vector<string> &v, const char* prompt)
 		switch (c)
 		{
 		case 0:
-		{
 			_getch();
 			break;
-		}
+		case 0x1b:
+			return false;
+			break;
+		case 0xe0:
+			GUISwitchPage(vectorIndex, matchedVector.size());
+			break;
 		case '\b':
-		{
-			if (userInput.size() > 0)
-			{
-				printf("\b \b");
-				userInput.pop_back();
-			}
+			GUIRemoveChar(s, vectorIndex);
 			break;
-		}
-
 		default:
-		{
-			if (c >= 32 && c <= 255)
-			{
-				userInput.push_back(c);
-				putc(c, stdout);
-			}
+			GUIInsertChar(s, c, vectorIndex);
 			break;
-		}
 		}
 	} while (c != '\r');
 
-	return userInput;
+	return true;
 }
 
-string GPS::GUISelectRua()
+bool GPS::GUISelectRua(string &userInput)
 {
-	string userInput;
-
-	char c;
+	int c;
+	unsigned vectorIndex = 0;
 
 	do
 	{
+		vector<Rua> matchedVector = findMatch(ruas, userInput);
+
 		UI::ClearConsole();
 		UI::DisplayFrame(strSelecionarRua);
 		printf(strSearchFormat, userInput.c_str());
 
-		vector<Rua> index = findMatch(ruas, userInput);
-
-		if (!index.empty())
+		if (!matchedVector.empty())
 		{
-			GUITable();
+			GUITable(matchedVector);
 		}
 
 		UI::DisplayFrame(strNavigationBar);
@@ -611,34 +584,70 @@ string GPS::GUISelectRua()
 
 		switch (c)
 		{
-		case 0:
-		{
+		case 0x00:
 			_getch();
 			break;
-		}
+		case 0x1b:
+			return false;
+			break;
+		case 0xe0:
+			GUISwitchPage(vectorIndex, matchedVector.size());
+			break;
 		case '\b':
-		{
-			if (userInput.size() > 0)
-			{
-				printf("\b \b");
-				userInput.pop_back();
-			}
-
+			GUIRemoveChar(userInput, vectorIndex);
 			break;
-		}
-
 		default:
-		{
-			if (c >= 32 && c <= 255)
-			{
-				userInput.push_back(c);
-				putc(c, stdout);
-			}
-
+			GUIInsertChar(userInput, c, vectorIndex);
 			break;
-		}
 		}
 	} while (c != '\r');
 
-	return userInput;
+	return true;
+}
+
+__forceinline void GPS::GUIInsertChar(string &userInput, char c, unsigned &vectorIndex) const
+{
+	if (c >= 32 && c <= 255)
+	{
+		userInput.push_back(c);
+		putc(c, stdout);
+		vectorIndex = 0;
+	}
+}
+
+__forceinline void GPS::GUIRemoveChar(string &userInput, unsigned &vectorIndex) const
+{
+	if (userInput.size() > 0)
+	{
+		printf("\b \b");
+		userInput.pop_back();
+		vectorIndex = 0;
+	}
+}
+
+void GPS::GUISwitchPage(unsigned &vectorIndex, unsigned vectorSize) const
+{
+	int c = _getch();
+
+	if (c == 73)
+	{
+		if (vectorIndex < 10)
+		{
+			vectorIndex = 0;
+		}
+		else
+		{
+			vectorIndex -= 10;
+		}
+	}
+	else if (c == 81)
+	{
+		if (vectorIndex + 10 < vectorSize)
+		{
+			vectorIndex += 10;
+		}
+	}
+	else
+	{
+	}
 }
