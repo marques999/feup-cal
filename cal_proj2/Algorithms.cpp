@@ -16,8 +16,8 @@ static vector<int> KMPTable(const string &pattern)
 {
 	vector<int> lps(pattern.size());
 
-	int len = 0;
-	int i = 1;
+	size_t len = 0;
+	size_t i = 1;
 
 	lps[0] = 0;
 

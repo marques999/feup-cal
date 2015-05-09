@@ -14,13 +14,10 @@
 #define __COMMON_H_
 
 #include <conio.h>
-#include <cstdlib>
 #include <algorithm>
 #include <fstream>
-#include <functional>
 #include <iostream>
 #include <iomanip>
-#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
