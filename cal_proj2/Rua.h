@@ -20,6 +20,7 @@ struct Rua
 	string nome;
 	string localidade;
 	string codPostal;
+	string toString;
 };
 
 #endif /* __RUA_H_ */

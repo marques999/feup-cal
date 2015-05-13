@@ -15,8 +15,7 @@
 
 #include "Common.h"
 
-unsigned KMPSearch(const string &text, const string &pattern);
 unsigned LevenshteinDistance(const string& s1, const string& s2);
-int LongestCommonSubstring(const string& s1, const string& s2);
+unsigned LongestCommonSubstring(const string& s1, const string& s2);
 
 #endif /* __ALGORITHMS_H_ */

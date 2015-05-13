@@ -128,6 +128,10 @@ bool GPS::readRuas(unsigned vectorIndex)
 			break;
 		}
 
+		ostringstream os;
+		
+		os << currentEntry.nome << " " << currentEntry.localidade << " " << currentEntry.codPostal;
+		currentEntry.toString = os.str();
 		ruas.push_back(currentEntry);
 	}
 
@@ -185,7 +189,7 @@ vector<string> GPS::findMatch(const vector<string> &v, const string &s)
 
 		for (unsigned i = 0; i < v.size(); i++)
 		{
-			if (i != matchIndex && LevenshteinDistance(v[i], s) == minimumDistance)
+			if (i != matchIndex && LevenshteinDistance(v[i], s) - minimumDistance)
 			{
 				matchVector.push_back(v[i]);
 			}
@@ -197,34 +201,12 @@ vector<string> GPS::findMatch(const vector<string> &v, const string &s)
 
 vector<Rua> GPS::findMatch(const vector<Rua> &v, const string &s)
 {
-	vector<Rua> matchVector;
+	vector<Rua> matchVector(v);
 
-	unsigned minimumDistance = 100;
-	unsigned matchIndex = -1;
-
-	for (unsigned i = 0; i < v.size(); i++)
+	make_heap(matchVector.begin(), matchVector.end(), [&s](const Rua &r1, const Rua &r2)
 	{
-		unsigned newDistance = LevenshteinDistance(v[i].nome, s);
-
-		if (newDistance < minimumDistance)
-		{
-			matchIndex = i;
-			minimumDistance = newDistance;
-		}
-	}
-
-	if (matchIndex != -1)
-	{
-		matchVector.push_back(v[matchIndex]);
-
-		for (unsigned i = 0; i < v.size(); i++)
-		{
-			if (i != matchIndex && LevenshteinDistance(v[i].nome, s) == minimumDistance)
-			{
-				matchVector.push_back(v[i]);
-			}
-		}
-	}
+		return LongestCommonSubstring(r1.toString, s) < LongestCommonSubstring(r2.toString, s);
+	});
 
 	return matchVector;
 }
@@ -273,7 +255,7 @@ unsigned GPS::index(const vector<Rua> &v, const string &s)
 {
 	for (unsigned i = 0; i < v.size(); i++)
 	{
-		if (v[i].nome == s)
+		if (v[i].toString == s)
 		{
 			return i;
 		}
@@ -369,32 +351,6 @@ void GPS::GUIDistrito()
 	}
 }
 
-// nome da rua, avenida ou praça deve começar pelo nome respetivo
-// caso contrario, se começar por uma letra do alfabeto sera entendido como uma localidade
-// caso contrario, se começar por um numero sera entendido como codigo-postal
-
-unsigned GPS::seleccionarDistrito(const string &s)
-{
-	return GUISelectAux(distritos, s, strSelecionarDistrito);
-}
-
-unsigned GPS::seleccionarConcelho(const string &s)
-{
-	return GUISelectAux(concelhos, s, strSelecionarConcelho);
-}
-
-unsigned GPS::seleccionarRua(const string &s)
-{
-	vector<string> nomesRuas;
-
-	for (const Rua &r : ruas)
-	{
-		nomesRuas.push_back(r.nome);
-	}
-
-	return GUISelectAux(nomesRuas, s, strSelecionarRua);
-}
-
 void GPS::GUIRua()
 {
 	if (concelho == -1)
@@ -435,11 +391,33 @@ void GPS::GUIRua()
 	}
 }
 
+unsigned GPS::seleccionarDistrito(const string &s)
+{
+	return GUISelectAux(distritos, s, strSelecionarDistrito);
+}
+
+unsigned GPS::seleccionarConcelho(const string &s)
+{
+	return GUISelectAux(concelhos, s, strSelecionarConcelho);
+}
+
+unsigned GPS::seleccionarRua(const string &s)
+{
+	vector<string> nomesRuas;
+
+	for (const Rua &r : ruas)
+	{
+		nomesRuas.push_back(r.nome);
+	}
+
+	return GUISelectAux(nomesRuas, s, strSelecionarRua);
+}
+
 void GPS::GUINavigate(unsigned &vectorIndex, unsigned vectorSize) const
 {
-	switch (_getch())
-	{
-	case 72:
+	int c = _getch();
+
+	if (c == 72)
 	{
 		if (vectorIndex > 0)
 		{
@@ -449,10 +427,8 @@ void GPS::GUINavigate(unsigned &vectorIndex, unsigned vectorSize) const
 		{
 			vectorIndex = vectorSize - 1;
 		}
-
-		break;
 	}
-	case 80:
+	else if (c == 80)
 	{
 		if (vectorIndex < vectorSize - 1)
 		{
@@ -462,9 +438,36 @@ void GPS::GUINavigate(unsigned &vectorIndex, unsigned vectorSize) const
 		{
 			vectorIndex = 0;
 		}
-
-		break;
 	}
+	else
+	{
+	}
+}
+
+void GPS::GUISwitchPage(unsigned &vectorIndex, unsigned vectorSize) const
+{
+	int c = _getch();
+
+	if (c == 73)
+	{
+		if (vectorIndex < 10)
+		{
+			vectorIndex = 0;
+		}
+		else
+		{
+			vectorIndex -= 10;
+		}
+	}
+	else if (c == 81)
+	{
+		if (vectorIndex + 10 < vectorSize)
+		{
+			vectorIndex += 10;
+		}
+	}
+	else
+	{
 	}
 }
 
@@ -603,7 +606,7 @@ bool GPS::GUISelectRua(string &userInput)
 	return true;
 }
 
-__forceinline void GPS::GUIInsertChar(string &userInput, char c, unsigned &vectorIndex) const
+inline void GPS::GUIInsertChar(string &userInput, char c, unsigned &vectorIndex) const
 {
 	if (c >= 32 && c <= 255)
 	{
@@ -613,39 +616,12 @@ __forceinline void GPS::GUIInsertChar(string &userInput, char c, unsigned &vecto
 	}
 }
 
-__forceinline void GPS::GUIRemoveChar(string &userInput, unsigned &vectorIndex) const
+inline void GPS::GUIRemoveChar(string &userInput, unsigned &vectorIndex) const
 {
 	if (userInput.size() > 0)
 	{
 		printf("\b \b");
 		userInput.pop_back();
 		vectorIndex = 0;
-	}
-}
-
-void GPS::GUISwitchPage(unsigned &vectorIndex, unsigned vectorSize) const
-{
-	int c = _getch();
-
-	if (c == 73)
-	{
-		if (vectorIndex < 10)
-		{
-			vectorIndex = 0;
-		}
-		else
-		{
-			vectorIndex -= 10;
-		}
-	}
-	else if (c == 81)
-	{
-		if (vectorIndex + 10 < vectorSize)
-		{
-			vectorIndex += 10;
-		}
-	}
-	else
-	{
 	}
 }
