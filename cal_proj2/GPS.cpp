@@ -219,27 +219,15 @@ void GPS::GUITable(const vector<Rua> &v)
 
 bool operator==(const Rua &r1, const Rua &r2)
 {
-	return r1.nome == r2.nome && r1.localidade == r2.localidade;
+	return r1.toString == r2.toString;
 }
 
-unsigned GPS::index(const vector<string> &v, const string &s)
+template<class T>
+unsigned GPS::index(const vector<T> &v, const T &s)
 {
 	for (unsigned i = 0; i < v.size(); i++)
 	{
 		if (v[i] == s)
-		{
-			return i;
-		}
-	}
-
-	return -1;
-}
-
-unsigned GPS::index(const vector<Rua> &v, const string &s)
-{
-	for (unsigned i = 0; i < v.size(); i++)
-	{
-		if (v[i].toString == s)
 		{
 			return i;
 		}
@@ -260,7 +248,11 @@ unsigned GPS::indexDistrito(const string &distritoEscolhido)
 
 unsigned GPS::indexRua(const string &ruaEscolhida)
 {
-	return index(ruas, ruaEscolhida);
+	Rua novaRua;
+
+	novaRua.toString = ruaEscolhida;
+
+	return index(ruas, novaRua);
 }
 
 void GPS::GUIConcelho()

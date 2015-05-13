@@ -61,8 +61,9 @@ private:
 	const char* strSearchFormat = "                Pesquisar: %s\xdb\n\n";
 	const char* strNavigationBar = "<ENTER> validar selec\x87\xc6o    <ESC> voltar";
 
-	unsigned index(const vector<string> &v, const string &s);
-	unsigned index(const vector<Rua> &v, const string &s);
+	template<class T>
+	unsigned index(const vector<T> &v, const T &s);
+
 	unsigned indexConcelho(const string &concelhoEscolhido);
 	unsigned indexDistrito(const string &distritoEscolhido);
 	unsigned indexRua(const string &ruaEscolhida);
