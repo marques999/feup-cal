@@ -60,19 +60,16 @@ void GPS::GUIInfo() const
 	UI::PauseConsole();
 }
 
-bool GPS::readConcelhos(unsigned vectorIndex)
+bool GPS::read(const char* filename, vector<string> &v)
 {
 	ifstream in;
 	string currentEntry;
 
-	char concelhosFilename[128];
-
-	sprintf_s(concelhosFilename, "Data/%d.txt", vectorIndex);
-	in.open(concelhosFilename);
+	in.open(filename);
 
 	if (!in.is_open() || in.eof() || in.bad())
 	{
-		throw FileIOException(concelhosFilename);
+		throw FileIOException(filename);
 	}
 
 	while (!in.eof())
@@ -84,10 +81,24 @@ bool GPS::readConcelhos(unsigned vectorIndex)
 			break;
 		}
 
-		concelhos.push_back(currentEntry);
+		v.push_back(currentEntry);
 	}
 
 	return true;
+}
+
+bool GPS::readConcelhos(unsigned vectorIndex)
+{
+	char concelhosFilename[128];
+
+	sprintf_s(concelhosFilename, "Data/%d.txt", vectorIndex);
+	
+	return read(concelhosFilename, concelhos);
+}
+
+bool GPS::readDistritos()
+{
+	return read("Data/index.txt", distritos);
 }
 
 bool GPS::readRuas(unsigned vectorIndex)
@@ -133,33 +144,6 @@ bool GPS::readRuas(unsigned vectorIndex)
 		os << currentEntry.nome << " " << currentEntry.localidade << " " << currentEntry.codPostal;
 		currentEntry.toString = os.str();
 		ruas.push_back(currentEntry);
-	}
-
-	return true;
-}
-
-bool GPS::readDistritos()
-{
-	ifstream in;
-	string currentEntry;
-
-	in.open("Data/index.txt");
-
-	if (!in.is_open() || in.eof() || in.bad())
-	{
-		throw FileIOException("index.txt");
-	}
-
-	while (!in.eof())
-	{
-		getline(in, currentEntry);
-
-		if (currentEntry.empty())
-		{
-			break;
-		}
-
-		distritos.push_back(currentEntry);
 	}
 
 	return true;
@@ -372,16 +356,7 @@ void GPS::GUIRua()
 
 		if (!ruaEscolhida.empty())
 		{
-			unsigned vectorIndex = indexRua(ruaEscolhida);
-
-			if (vectorIndex == -1)
-			{
-				rua = seleccionarRua(ruaEscolhida);
-			}
-			else
-			{
-				rua = vectorIndex;
-			}
+			rua = seleccionarRua(ruaEscolhida);
 
 			if (rua != -1)
 			{
@@ -471,7 +446,8 @@ void GPS::GUISwitchPage(unsigned &vectorIndex, unsigned vectorSize) const
 	}
 }
 
-unsigned GPS::GUISelectAux(const vector<string> &v, const string &s, const char* prompt)
+template<class T>
+unsigned GPS::GUISelectAux(const vector<T> &v, const T &s, const char* prompt)
 {
 	vector<string> previousMatches = findMatch(v, s);
 

@@ -40,7 +40,9 @@ private:
 	void GUISwitchPage(unsigned &vectorIndex, unsigned vectorSize) const;
 	void GUIInsertChar(string &userInput, char c, unsigned &vectorIndex) const;
 	void GUIRemoveChar(string &userInput, unsigned &vectorIndex) const;
-	unsigned GUISelectAux(const vector<string> &v, const string &s, const char* prompt);
+	
+	template<class T>
+	unsigned GUISelectAux(const vector<T> &v, const T &s, const char* prompt);
 
 	vector<string> findMatch(const vector<string> &v, const string &s);
 	vector<Rua> findMatch(const vector<Rua> &v, const string &s);
@@ -48,6 +50,7 @@ private:
 	vector<string> concelhos;
 	vector<Rua> ruas;
 
+	bool read(const char* filename, vector<string> &v);
 	bool readDistritos();
 	bool readConcelhos(unsigned vectorIndex);
 	bool readRuas(unsigned vectorIndex);
