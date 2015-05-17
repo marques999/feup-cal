@@ -55,10 +55,15 @@ private:
 	bool readConcelhos(unsigned vectorIndex);
 	bool readRuas(unsigned vectorIndex);
 
+	const char* strDetalhesMorada = "DETALHES DA MORADA";
+	const char* strDetalhesConcelho = "Concelho: ";
+	const char* strDetalhesDistrito = "Distrito: ";
+	const char* strNavigation = "                   %s\n";
+	const char* strNavigationArrow = "                -> %s\n";
 	const char* strSelecionarConcelho = "SELECIONAR CONCELHO";
 	const char* strSelecionarDistrito = "SELECIONAR DISTRITO";
 	const char* strSelecionarRua = "SELECIONAR RUA";
-	const char* strSearchFormat = "\n                Pesquisar: %s\xdb\n\n";
+	const char* strSearchFormat = "                Pesquisar: %s\xdb\n\n";
 	const char* strNavigationBar = "<ENTER> validar selec\x87\xc6o    <ESC> voltar";
 
 	template<class T>

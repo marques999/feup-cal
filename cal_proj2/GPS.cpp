@@ -47,15 +47,15 @@ void GPS::GUIInfo() const
 	}
 
 	UI::ClearConsole();
-	UI::DisplayFrame("DETALHES DA MORADA");
+	UI::DisplayFrame(strDetalhesMorada);
 
 	vector<string> detalhesMorada;
 
 	detalhesMorada.push_back(ruas[rua].nome);
 	detalhesMorada.push_back(ruas[rua].codPostal + ' ' + ruas[rua].localidade);
 	detalhesMorada.push_back(string());
-	detalhesMorada.push_back("Concelho: " + concelhos[concelho]);
-	detalhesMorada.push_back("Distrito: " + distritos[distrito]);
+	detalhesMorada.push_back(strDetalhesConcelho + concelhos[concelho]);
+	detalhesMorada.push_back(strDetalhesDistrito + distritos[distrito]);
 
 	UI::DisplayBox(detalhesMorada, 0);
 	UI::PauseConsole();
@@ -93,7 +93,7 @@ bool GPS::readConcelhos(unsigned vectorIndex)
 	char concelhosFilename[128];
 
 	sprintf_s(concelhosFilename, "Data/%d.txt", vectorIndex);
-	
+
 	return read(concelhosFilename, concelhos);
 }
 
@@ -120,7 +120,7 @@ bool GPS::readRuas(unsigned vectorIndex)
 	while (!in.eof())
 	{
 		ostringstream os;
-		
+
 		getline(in, currentEntry.nome);
 
 		if (currentEntry.nome.empty())
@@ -389,15 +389,15 @@ unsigned GPS::seleccionarRua(const string &s)
 		UI::ClearConsole();
 		UI::DisplayFrame(strSelecionarRua);
 
-		for (size_t i = 0; i < vectorSize; i++)
+		for (unsigned i = 0; i < vectorSize; i++)
 		{
 			if (i == vectorIndex)
 			{
-				printf("                -> %s\n", previousMatches[i].nome.c_str());
+				printf(strNavigationArrow, previousMatches[i].nome.c_str());
 			}
 			else
 			{
-				printf("                   %s\n", previousMatches[i].nome.c_str());
+				printf(strNavigation, previousMatches[i].nome.c_str());
 			}
 		}
 
@@ -500,15 +500,15 @@ unsigned GPS::GUISelectAux(const vector<T> &v, const T &s, const char* prompt)
 		UI::ClearConsole();
 		UI::DisplayFrame(prompt);
 
-		for (size_t i = 0; i < vectorSize; i++)
+		for (unsigned i = 0; i < vectorSize; i++)
 		{
 			if (i == vectorIndex)
 			{
-				printf("                -> %s\n", previousMatches[i].c_str());
+				printf(strNavigationArrow, previousMatches[i].c_str());
 			}
 			else
 			{
-				printf("                   %s\n", previousMatches[i].c_str());
+				printf(strNavigation, previousMatches[i].c_str());
 			}
 		}
 

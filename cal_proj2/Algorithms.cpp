@@ -12,7 +12,7 @@
 
 #include "Algorithms.h"
 
-bool compare(char a, char b)
+static bool compare(char a, char b)
 {
 	if (a >= 32 && a <= 127)
 	{
