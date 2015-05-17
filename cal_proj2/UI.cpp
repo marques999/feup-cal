@@ -22,10 +22,10 @@ namespace UI
 {
 	void DisplayBox(const vector<string> &v, unsigned index)
 	{
-		UI::Display(boxTop);
+		const unsigned numberEntries = v.size() - index;
+		const unsigned maximumIndex = numberEntries < 10 ? index + numberEntries : index + 10;
 
-		unsigned numberEntries = v.size() - index;
-		unsigned maximumIndex = numberEntries < 10 ? index + numberEntries : index + 10;
+		UI::Display(boxTop);
 
 		for (unsigned i = index; i < maximumIndex; i++)
 		{
@@ -94,20 +94,20 @@ namespace UI
 
 	void DisplayFrame(const char* s)
 	{
-		int stringLength = strlen(s);
-		int stringBegin = (stringLength % 2 == 0) ? (23 - (stringLength / 2)) : (22 - (stringLength / 2));
-		int stringEnd = 22 + (stringLength / 2);
+		const unsigned stringLength = strlen(s);
+		const unsigned stringBegin = (stringLength % 2 == 0) ? (23 - (stringLength / 2)) : (22 - (stringLength / 2));
+		const unsigned stringEnd = 22 + (stringLength / 2);
 
 		printf("\n\t\tษอออออออออออออออออออออออออออออออออออออออออออออออป\n\t\tบ ");
 
-		for (int i = 0; i < stringBegin; i++)
+		for (unsigned i = 0; i < stringBegin; i++)
 		{
 			putchar(' ');
 		}
 
 		printf(s);
 
-		for (int i = stringEnd; i < 45; i++)
+		for (unsigned i = stringEnd; i < 45; i++)
 		{
 			putchar(' ');
 		}
