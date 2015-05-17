@@ -33,7 +33,7 @@ public:
 		this->args = s;
 	}
 
-	virtual const char* str() const = 0;
+	virtual const string& str() const = 0;
 
 protected:
 
@@ -73,11 +73,9 @@ public:
 	{
 	}
 
-	const char* str() const
+	const string& str() const
 	{
-		string s = "ERROR: a file I/O occured when trying to access " + args + ".";
-
-		return s.c_str();
+		return "ERROR: a file I/O occured when trying to access " + args + ".";
 	}
 };
 
