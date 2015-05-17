@@ -20,14 +20,14 @@ const char* paddingLeft = "                  º ";
 
 namespace UI
 {
-	void DisplayBox(const vector<string> &v, size_t beginIndex)
+	void DisplayBox(const vector<string> &v, unsigned index)
 	{
 		UI::Display(boxTop);
 
-		size_t numberEntries = v.size() - beginIndex;
-		size_t maximumIndex = numberEntries < 10 ? beginIndex + numberEntries : beginIndex + 10;
+		unsigned numberEntries = v.size() - index;
+		unsigned maximumIndex = numberEntries < 10 ? index + numberEntries : index + 10;
 
-		for (size_t i = beginIndex; i < maximumIndex; i++)
+		for (unsigned i = index; i < maximumIndex; i++)
 		{
 			printf("%s%-40sº\n", paddingLeft, v[i].c_str());
 		}
