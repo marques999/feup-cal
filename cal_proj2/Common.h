@@ -75,7 +75,7 @@ public:
 
 	string str() const
 	{
-		return "ERROR: file I/O exception occured while trying to access " + args + ".";
+		return "ERROR: a file I/O occured when trying to access " + args + ".";
 	}
 };
 

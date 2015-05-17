@@ -15,6 +15,8 @@
 
 #include "Common.h"
 
+#define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
+
 unsigned LevenshteinDistance(const string& s1, const string& s2);
 unsigned LongestCommonSubstring(const string& s1, const string& s2);
 

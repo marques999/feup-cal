@@ -52,7 +52,8 @@ void GPS::GUIInfo() const
 	vector<string> detalhesMorada;
 
 	detalhesMorada.push_back(ruas[rua].nome);
-	detalhesMorada.push_back(ruas[rua].codPostal + '\t' + ruas[rua].localidade);
+	detalhesMorada.push_back(ruas[rua].codPostal + ' ' + ruas[rua].localidade);
+	detalhesMorada.push_back(string());
 	detalhesMorada.push_back("Concelho: " + concelhos[concelho]);
 	detalhesMorada.push_back("Distrito: " + distritos[distrito]);
 
@@ -125,14 +126,14 @@ bool GPS::readRuas(unsigned vectorIndex)
 			break;
 		}
 
-		getline(in, currentEntry.localidade);
+		getline(in, currentEntry.codPostal);
 
 		if (currentEntry.nome.empty())
 		{
 			break;
 		}
 
-		getline(in, currentEntry.codPostal);
+		getline(in, currentEntry.localidade);
 
 		if (currentEntry.nome.empty())
 		{
@@ -173,7 +174,7 @@ vector<string> GPS::findMatch(const vector<string> &v, const string &s)
 
 		for (unsigned i = 0; i < v.size(); i++)
 		{
-			if (i != matchIndex && LevenshteinDistance(v[i], s) - minimumDistance)
+			if (i != matchIndex && LevenshteinDistance(v[i], s) <= minimumDistance)
 			{
 				matchVector.push_back(v[i]);
 			}
@@ -195,17 +196,18 @@ vector<Rua> GPS::findMatch(const vector<Rua> &v, const string &s)
 	return matchVector;
 }
 
-void GPS::GUITable(const vector<Rua> &v)
+void GPS::GUITable(const vector<Rua> &v, unsigned index)
 {
 	vector<string> tableLabel = { " Nome", " Localidade", " Codigo" };
 
 	const unsigned columnCount = 3;
-	const unsigned rowCount = v.size() < 10 ? v.size() : 10;
-	const int tableLength[columnCount] = { 36, 12, 10 };
+	const unsigned numberEntries = v.size() - index;
+	const unsigned maximumIndex = numberEntries < 10 ? index + numberEntries : index + 10;
+	const int tableLength[columnCount] = { 36, 20, 10 };
 
 	UI::DisplayTable(columnCount, tableLabel, tableLength);
 
-	for (unsigned i = 0; i < rowCount; i++)
+	for (unsigned i = index; i < maximumIndex; i++)
 	{
 		vector<string> tableRow(columnCount);
 
@@ -334,6 +336,8 @@ void GPS::GUIRua()
 		return;
 	}
 
+	Rua novaRua;
+
 	ruas.clear();
 	readRuas(concelho);
 
@@ -370,14 +374,54 @@ unsigned GPS::seleccionarConcelho(const string &s)
 
 unsigned GPS::seleccionarRua(const string &s)
 {
-	vector<string> nomesRuas;
+	vector<Rua> previousMatches = findMatch(ruas, s);
 
-	for (const Rua &r : ruas)
+	if (previousMatches.size() == 1)
 	{
-		nomesRuas.push_back(r.nome);
+		return index(ruas, previousMatches[0]);
 	}
 
-	return GUISelectAux(nomesRuas, s, strSelecionarRua);
+	unsigned vectorSize = previousMatches.size();
+	unsigned vectorIndex = 0;
+
+	while (true)
+	{
+		UI::ClearConsole();
+		UI::DisplayFrame(strSelecionarRua);
+
+		for (size_t i = 0; i < vectorSize; i++)
+		{
+			if (i == vectorIndex)
+			{
+				printf("                -> %s\n", previousMatches[i].nome.c_str());
+			}
+			else
+			{
+				printf("                   %s\n", previousMatches[i].nome.c_str());
+			}
+		}
+
+		UI::DisplayFrame(strNavigationBar);
+
+		int c = _getch();
+
+		if (c == 0xe0)
+		{
+			GUINavigate(vectorIndex, vectorSize);
+		}
+		else
+		{
+			if (c == 0x0d || c == 0x0a)
+			{
+				return index(ruas, previousMatches[vectorIndex]);
+			}
+
+			if (c == 0x1b)
+			{
+				return -1;
+			}
+		}
+	}
 }
 
 void GPS::GUINavigate(unsigned &vectorIndex, unsigned vectorSize) const
@@ -442,6 +486,11 @@ template<class T>
 unsigned GPS::GUISelectAux(const vector<T> &v, const T &s, const char* prompt)
 {
 	vector<string> previousMatches = findMatch(v, s);
+
+	if (previousMatches.size() == 1)
+	{
+		return index(v, previousMatches[0]);
+	}
 
 	const unsigned vectorSize = previousMatches.size();
 	unsigned vectorIndex = 0;
@@ -545,7 +594,7 @@ bool GPS::GUISelectRua(string &userInput)
 
 		if (!matchedVector.empty())
 		{
-			GUITable(matchedVector);
+			GUITable(matchedVector, vectorIndex);
 		}
 
 		UI::DisplayFrame(strNavigationBar);
@@ -579,7 +628,7 @@ inline void GPS::GUIInsertChar(string &userInput, char c, unsigned &vectorIndex)
 	if (c >= 32 && c <= 255)
 	{
 		userInput.push_back(c);
-		putc(c, stdout);
+		putchar(c);
 		vectorIndex = 0;
 	}
 }

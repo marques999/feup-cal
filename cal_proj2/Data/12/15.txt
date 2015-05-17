@@ -1,33 +1,156 @@
 Rua da Costa
-Campo
 4440-049
+Campo
 Travessa da Costa
-Campo
 4440-049
+Campo
 Rua da Retorta
-Campo
 4440-049
+Campo
 Rua dos Urreiros
-Campo
 4440-049
-Rua 25 de Abril
 Campo
-4440-049
+Avenida 25 de Abril
+4440-502
+Campo
 Avenida 5 de Outubro
-Valongo
 4440-049
+Valongo
 Rua Oliveira Zina
-Valongo
 4440-049
+Valongo
 Praça Machado dos Santos
-Valongo
 4440-049
+Valongo
 Rua da Passagem
-Valongo
 4440-049
+Valongo
 Rua da Ilha
+4440-558
 Valongo
-4440-049
 Rua das Descobertas
-Valongo
 4440-049
+Valongo
+Avenida do Conhecimento
+4440-238
+Valongo
+Avenida Doutor Fernando Melo
+4440-777
+Valongo
+Avenida 5 de Outubro
+4440-503
+Valongo
+Avenida Engenheiro Duarte Pacheco
+4445-416
+Ermesinde
+Avenida Engenheiro Duarte Pacheco
+4440-500
+Valongo
+Bairro das Pereiras
+4440-686
+Valongo
+Avenida dos Desportos
+4440-504
+Valongo
+Praceta do Mosqueiro
+4440-792
+Valongo
+Praceta da Ilha
+4440-787
+Valongo
+Praceta da Escola Nova
+4440-513
+Valongo
+Praceta Comendador Matos
+4445-073
+Alfena
+Praceta da Costa
+4445-662
+Ermesinde
+Praceta Primavera
+4440-790
+Valongo
+Avenida Primavera
+4445-649
+Ermesinde
+Praceta Primavera
+4445-297
+Ermesinde
+Praceta do Horto
+4440-788
+Valongo
+Quinta da Balsa
+4440-291
+Sobrado
+Avenida Joaquim Ribeiro Mota
+4440-221
+Campo
+Rotunda Lameira Ferreira
+4440-490
+Valongo
+Rotunda do Mineiro
+4440-656
+Valongo
+Rotunda da Costa
+4445-307
+Ermesinde
+Rotunda do Megalito
+4445-289
+Alfena
+Rua Jaime Batalha Reis
+4440-775
+Valongo
+Rua Cristiano Cruz
+4440-771
+Valongo
+Rua Cavada do Raposo
+4440-768
+Valongo
+Rua Primavera
+4440-793
+Valongo
+Rua Correia Dias
+4440-808
+Valongo
+Rua Central
+4440-541
+Valongo
+Rua Joaquim Moreira Pacheco
+4440-666
+Valongo
+Rua de Couce
+4440-587
+Valongo
+Rua Fonseca Dias
+4440-652
+Valongo
+Rua do Sobrado de Cima
+4440-361
+Sobrado
+Rua da Lomba
+4440316
+Sobrado
+Rua de Vila Flor
+4440-457
+Sobrado
+Travessa de Vila Flor
+4440-457
+Sobrado
+Rua Vale Maior
+4440-456
+Sobrado
+Rua da Aldeia
+4440-312
+Sobrado
+Rua do Alto do Vilar
+4440-343
+Sobrado
+Travessa do Alto do Vilar
+4440-429
+Sobrado
+Rua Alexandre Braga
+4440-302
+Sobrado
+Rua da Balsa
+4440-314
+Sobrado

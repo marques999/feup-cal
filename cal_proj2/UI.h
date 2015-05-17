@@ -30,7 +30,7 @@ namespace UI
 	*/
 	inline void PauseConsole()
 	{
-		printf("Press any key to continue...");
+		printf("\nPress any key to continue...");
 		cin.get();
 		cin.clear();
 
@@ -68,7 +68,7 @@ namespace UI
 	*/
 	inline void DisplayMessage(const string &msg)
 	{
-		cout << "\n" << msg << "\n" << "Press any key to continue...";
+		printf("\n%s\nPress any key to continue...", msg.c_str());
 		cin.get();
 		cin.clear();
 
@@ -100,9 +100,9 @@ namespace UI
 
 	/**
 	* @brief displays a table row
-	* @param c number of columns (same as DisplayTable())
+	* @param c number of columns
 	* @param labels array containing the row values
-	* @param length array containing the width of each cell (should be the same size as c)
+	* @param length array containing the width of each column (should be the same size as c)
 	*/
 	void DisplayTableRow(int c, const vector<string> &labels, const int length[]);
 }

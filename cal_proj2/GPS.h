@@ -32,7 +32,7 @@ private:
 	void GUIConcelho();
 	void GUIDistrito();
 	void GUIRua();
-	void GUITable(const vector<Rua> &v);
+	void GUITable(const vector<Rua> &v, unsigned index);
 	void GUIInfo() const;
 	bool GUISelectRua(string &userInput);
 	bool GUISelect(const vector<string> &v, string &userInput, const char* prompt);
@@ -58,7 +58,7 @@ private:
 	const char* strSelecionarConcelho = "SELECIONAR CONCELHO";
 	const char* strSelecionarDistrito = "SELECIONAR DISTRITO";
 	const char* strSelecionarRua = "SELECIONAR RUA";
-	const char* strSearchFormat = "                Pesquisar: %s\xdb\n\n";
+	const char* strSearchFormat = "\n                Pesquisar: %s\xdb\n\n";
 	const char* strNavigationBar = "<ENTER> validar selec\x87\xc6o    <ESC> voltar";
 
 	template<class T>

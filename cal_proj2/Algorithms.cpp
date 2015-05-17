@@ -42,8 +42,6 @@ bool compare(char a, char b)
 	return false;
 }
 
-#define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
-
 unsigned LevenshteinDistance(const string& s1, const string& s2)
 {
 	const unsigned len1 = s1.size();
@@ -105,7 +103,7 @@ unsigned LongestCommonSubstring(const string& s1, const string& s2)
 					curr[j] = 1 + prev[j - 1];
 				}
 
-				index = std::max(index, curr[j]);
+				index = max(index, curr[j]);
 			}
 		}
 
