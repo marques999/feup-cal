@@ -28,12 +28,12 @@ class CustomException
 {
 public:
 
-	CustomException(const string &s)
+	CustomException(const string& s)
 	{
 		this->args = s;
 	}
 
-	virtual string str() const = 0;
+	virtual const char* str() const = 0;
 
 protected:
 
@@ -48,7 +48,7 @@ public:
 	{
 	}
 
-	virtual string str() const = 0;
+	virtual const char* str() const = 0;
 };
 
 class InvalidParameter : public MessageException
@@ -59,7 +59,7 @@ public:
 	{
 	}
 
-	string str() const
+	const char* str() const
 	{
 		return "ERROR: you have entered an invalid value.";
 	}
@@ -69,13 +69,15 @@ class FileIOException : public CustomException
 {
 public:
 
-	FileIOException(const string &s) : CustomException(s)
+	FileIOException(const char* s) : CustomException(s)
 	{
 	}
 
-	string str() const
+	const char* str() const
 	{
-		return "ERROR: a file I/O occured when trying to access " + args + ".";
+		string s = "ERROR: a file I/O occured when trying to access " + args + ".";
+
+		return s.c_str();
 	}
 };
 
