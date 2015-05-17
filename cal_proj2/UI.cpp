@@ -35,7 +35,7 @@ namespace UI
 		UI::Display(boxBottom);
 	}
 
-	void DisplayTable(int c, const vector<string> &labels, const int length[])
+	void DisplayTable(unsigned c, const vector<string> &labels, const unsigned length[])
 	{
 		string frameTop;
 		string frameBottom;
@@ -45,9 +45,9 @@ namespace UI
 		frameBottom.push_back('\xc8');
 		ss << '\xba';
 
-		for (int i = 0; i < c; i++)
+		for (unsigned i = 0; i < c; i++)
 		{
-			for (int j = 0; j < length[i]; j++)
+			for (unsigned j = 0; j < length[i]; j++)
 			{
 				frameTop.push_back('\xcd');
 				frameBottom.push_back('\xcd');
@@ -73,13 +73,13 @@ namespace UI
 		UI::Display(tableBottom);
 	}
 
-	void DisplayTableRow(int c, const vector<string> &labels, const int length[])
+	void DisplayTableRow(unsigned c, const vector<string> &labels, const unsigned length[])
 	{
 		stringstream ss;
 
 		ss << " ";
 
-		for (int i = 0; i < c; i++)
+		for (unsigned i = 0; i < c; i++)
 		{
 			ss << left << setw(length[i] - 1) << labels[i];
 

@@ -203,7 +203,7 @@ void GPS::GUITable(const vector<Rua> &v, unsigned index)
 	const unsigned columnCount = 3;
 	const unsigned numberEntries = v.size() - index;
 	const unsigned maximumIndex = numberEntries < 10 ? index + numberEntries : index + 10;
-	const int tableLength[columnCount] = { 36, 20, 10 };
+	const unsigned tableLength[columnCount] = { 36, 20, 10 };
 
 	UI::DisplayTable(columnCount, tableLabel, tableLength);
 

@@ -82,7 +82,7 @@ namespace UI
 	* @brief displays vector contents as a list inside a rectangular box
 	* @param v a vector of strings containing the elements to be displayed
 	*/
-	void DisplayBox(const vector<string> &v, size_t begin);
+	void DisplayBox(const vector<string> &v, unsigned index);
 
 	/**
 	* @brief displays a frame (or header)
@@ -96,7 +96,7 @@ namespace UI
 	* @param labels array containing the labels
 	* @param length array containing the width of each column (should be the same size as c)
 	*/
-	void DisplayTable(int c, const vector<string> &labels, const int length[]);
+	void DisplayTable(unsigned c, const vector<string> &labels, const unsigned length[]);
 
 	/**
 	* @brief displays a table row
@@ -104,7 +104,7 @@ namespace UI
 	* @param labels array containing the row values
 	* @param length array containing the width of each column (should be the same size as c)
 	*/
-	void DisplayTableRow(int c, const vector<string> &labels, const int length[]);
+	void DisplayTableRow(unsigned c, const vector<string> &labels, const unsigned length[]);
 }
 
 #endif /* __UI_H_ */
