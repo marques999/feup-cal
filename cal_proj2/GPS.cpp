@@ -119,6 +119,8 @@ bool GPS::readRuas(unsigned vectorIndex)
 
 	while (!in.eof())
 	{
+		ostringstream os;
+		
 		getline(in, currentEntry.nome);
 
 		if (currentEntry.nome.empty())
@@ -128,20 +130,18 @@ bool GPS::readRuas(unsigned vectorIndex)
 
 		getline(in, currentEntry.codPostal);
 
-		if (currentEntry.nome.empty())
+		if (currentEntry.codPostal.empty())
 		{
 			break;
 		}
 
 		getline(in, currentEntry.localidade);
 
-		if (currentEntry.nome.empty())
+		if (currentEntry.localidade.empty())
 		{
 			break;
 		}
 
-		ostringstream os;
-		
 		os << currentEntry.nome << " " << currentEntry.localidade << " " << currentEntry.codPostal;
 		currentEntry.toString = os.str();
 		ruas.push_back(currentEntry);
