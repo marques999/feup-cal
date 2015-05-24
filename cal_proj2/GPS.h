@@ -13,7 +13,6 @@
 #ifndef __GPS_H_
 #define __GPS_H_
 
-#include "Algorithms.h"
 #include "Rua.h"
 #include "UI.h"
 
@@ -34,22 +33,19 @@ private:
 	void GUIRua();
 	void GUITable(const vector<Rua> &v, unsigned index);
 	void GUIInfo() const;
-	bool GUISelectRua(string &userInput);
-	bool GUISelect(const vector<string> &v, string &userInput, const char* prompt);
 	void GUINavigate(unsigned &vectorIndex, unsigned vectorSize) const;
 	void GUISwitchPage(unsigned &vectorIndex, unsigned vectorSize) const;
 	void GUIInsertChar(string &userInput, char c, unsigned &vectorIndex) const;
 	void GUIRemoveChar(string &userInput, unsigned &vectorIndex) const;
-	
-	template<class T>
-	unsigned GUISelectAux(const vector<T> &v, const T &s, const char* prompt);
+
+	template<class T> unsigned GUISelectAux(const vector<T> &v, const T &s, const char* prompt);
+	template<class T> unsigned index(const vector<T> &v, const T &s);
 
 	vector<string> findMatch(const vector<string> &v, const string &s);
 	vector<Rua> findMatch(const vector<Rua> &v, const string &s);
-	vector<string> distritos;
-	vector<string> concelhos;
-	vector<Rua> ruas;
 
+	bool GUISelectRua(string &userInput);
+	bool GUISelect(const vector<string> &v, string &userInput, const char* prompt);
 	bool read(const char* filename, vector<string> &v);
 	bool readDistritos();
 	bool readConcelhos(unsigned vectorIndex);
@@ -66,8 +62,9 @@ private:
 	const char* strSearchFormat = "                Pesquisar: %s\xdb\n\n";
 	const char* strNavigationBar = "<ENTER> validar selec\x87\xc6o    <ESC> voltar";
 
-	template<class T>
-	unsigned index(const vector<T> &v, const T &s);
+	vector<string> distritos;
+	vector<string> concelhos;
+	vector<Rua> ruas;
 
 	unsigned indexConcelho(const string &concelhoEscolhido);
 	unsigned indexDistrito(const string &distritoEscolhido);

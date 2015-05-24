@@ -20,11 +20,11 @@ int main()
 	{
 		gps.GUIMenu();
 	}
-	catch (CustomException &e)
+	catch (FileIOException &e)
 	{
 		UI::DisplayMessage(e.str());
 	}
-	catch (MessageException &e)
+	catch (InvalidParameter &e)
 	{
 		UI::DisplayMessage(e.str());
 	}

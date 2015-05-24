@@ -10,6 +10,7 @@
  *
  */
 
+#include "Algorithms.h"
 #include "GPS.h"
 
 GPS::GPS()
