@@ -156,6 +156,7 @@ vector<string> GPS::findMatch(const vector<string> &v, const string &s)
 	vector<string> matchVector;
 
 	unsigned minimumDistance = 100;
+	unsigned longestMatch = 0;
 	unsigned matchIndex = -1;
 
 	for (unsigned i = 0; i < v.size(); i++)
@@ -165,6 +166,7 @@ vector<string> GPS::findMatch(const vector<string> &v, const string &s)
 		if (newDistance < minimumDistance)
 		{
 			matchIndex = i;
+			longestMatch = v[i].length();
 			minimumDistance = newDistance;
 		}
 	}
@@ -173,10 +175,18 @@ vector<string> GPS::findMatch(const vector<string> &v, const string &s)
 	{
 		matchVector.push_back(v[matchIndex]);
 
+		if (minimumDistance > s.size())
+		{
+			return vector<string>();
+		}
+
 		for (unsigned i = 0; i < v.size(); i++)
 		{
-			if (i != matchIndex && LevenshteinDistance(v[i], s) <= minimumDistance)
+			unsigned currentDistance = LevenshteinDistance(v[i], s);
+			
+			if (i != matchIndex && currentDistance <= minimumDistance)
 			{
+				longestMatch = max(longestMatch, v[i].size());
 				matchVector.push_back(v[i]);
 			}
 		}
