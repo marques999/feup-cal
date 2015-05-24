@@ -33,7 +33,7 @@ public:
 		this->args = s;
 	}
 
-	virtual const string& str() const = 0;
+	virtual const string str() const = 0;
 
 protected:
 
@@ -48,7 +48,7 @@ public:
 	{
 	}
 
-	virtual const char* str() const = 0;
+	virtual const string str() const = 0;
 };
 
 class InvalidParameter : public MessageException
@@ -59,7 +59,7 @@ public:
 	{
 	}
 
-	const char* str() const
+	const string str() const
 	{
 		return "ERROR: you have entered an invalid value.";
 	}
@@ -69,11 +69,11 @@ class FileIOException : public CustomException
 {
 public:
 
-	FileIOException(const char* s) : CustomException(s)
+	FileIOException(const string &s) : CustomException(s)
 	{
 	}
 
-	const string& str() const
+	const string str() const
 	{
 		return "ERROR: a file I/O occured when trying to access " + args + ".";
 	}

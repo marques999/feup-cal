@@ -22,7 +22,7 @@ int main()
 	}
 	catch (CustomException &e)
 	{
-		UI::DisplayMessage(e.str().c_str());
+		UI::DisplayMessage(e.str());
 	}
 	catch (MessageException &e)
 	{

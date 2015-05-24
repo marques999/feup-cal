@@ -20,7 +20,7 @@ GPS::GPS()
 	}
 	catch (FileIOException &e)
 	{
-		UI::DisplayMessage(e.str().c_str());
+		UI::DisplayMessage(e.str());
 	}
 
 	distrito = -1;

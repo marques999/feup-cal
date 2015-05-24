@@ -66,9 +66,9 @@ namespace UI
 	* @brief displays a brief error or informative message
 	* @param s string to be displayed
 	*/
-	inline void DisplayMessage(const char* msg)
+	inline void DisplayMessage(const string& msg)
 	{
-		printf("\n%s\nPress any key to continue...", msg);
+		printf("\n%s\nPress any key to continue...", msg.c_str());
 		cin.get();
 		cin.clear();
 
