@@ -22,10 +22,12 @@ static bool compare(char a, char b)
 	switch (a)
 	{
 	case '\xc6': case '\xc7': // „√
+	case '\x83': case '\xb7': // ‡¿
+	case '\x85': case '\xb6': // ‡¿
 	case '\xa0': case '\xb5': // ·¡
 		return 'A' == toupper(b);
-	case '\x82': case '\x88':
-	case '\x90': case '\xd2':
+	case '\x82': case '\x90': // È…
+	case '\x88': case '\xd2': // Í 
 		return 'E' == toupper(b);
 	case '\xa1': case '\xd6': // ÌÕ
 		return 'I' == toupper(b);
