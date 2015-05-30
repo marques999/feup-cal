@@ -47,17 +47,16 @@ void GPS::GUIInfo() const
 		return;
 	}
 
-	UI::ClearConsole();
-	UI::DisplayFrame(strDetalhesMorada);
-
 	vector<string> detalhesMorada;
 
+	UI::ClearConsole();
+	UI::DisplayFrame(strDetalhesMorada);
 	detalhesMorada.push_back(ruas[rua].nome);
 	detalhesMorada.push_back(ruas[rua].codPostal + ' ' + ruas[rua].localidade);
 	detalhesMorada.push_back(string());
+	detalhesMorada.push_back(strDetalhesFreguesia + ruas[rua].localidade);
 	detalhesMorada.push_back(strDetalhesConcelho + concelhos[concelho]);
 	detalhesMorada.push_back(strDetalhesDistrito + distritos[distrito]);
-
 	UI::DisplayBox(detalhesMorada, 0);
 	UI::PauseConsole();
 }
@@ -183,7 +182,7 @@ vector<string> GPS::findMatch(const vector<string> &v, const string &s)
 		for (unsigned i = 0; i < v.size(); i++)
 		{
 			unsigned currentDistance = LevenshteinDistance(v[i], s);
-			
+
 			if (i != matchIndex && currentDistance <= minimumDistance)
 			{
 				longestMatch = max(longestMatch, v[i].size());
@@ -392,7 +391,7 @@ unsigned GPS::seleccionarRua(const string &s)
 		return index(ruas, previousMatches[0]);
 	}
 
-	unsigned vectorSize = previousMatches.size();
+	unsigned vectorSize = min(previousMatches.size(), (unsigned) 5);
 	unsigned vectorIndex = 0;
 
 	while (true)
@@ -402,13 +401,15 @@ unsigned GPS::seleccionarRua(const string &s)
 
 		for (unsigned i = 0; i < vectorSize; i++)
 		{
+			Rua ruaAtual = previousMatches[i];
+
 			if (i == vectorIndex)
 			{
-				printf(strNavigationArrow, previousMatches[i].nome.c_str());
+				printf(strTableNavigationArrow, ruaAtual.nome.c_str(), ruaAtual.localidade.c_str(), ruaAtual.codPostal.c_str());
 			}
 			else
 			{
-				printf(strNavigation, previousMatches[i].nome.c_str());
+				printf(strTableNavigation, ruaAtual.nome.c_str(), ruaAtual.localidade.c_str(), ruaAtual.codPostal.c_str());
 			}
 		}
 

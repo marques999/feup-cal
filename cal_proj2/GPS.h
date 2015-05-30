@@ -52,10 +52,13 @@ private:
 	bool readRuas(unsigned vectorIndex);
 
 	const char* strDetalhesMorada = "DETALHES DA MORADA";
+	const char* strDetalhesFreguesia = "Freguesia: ";
 	const char* strDetalhesConcelho = "Concelho: ";
 	const char* strDetalhesDistrito = "Distrito: ";
 	const char* strNavigation = "                   %s\n";
 	const char* strNavigationArrow = "                -> %s\n";
+	const char* strTableNavigation = "                   %s\n                   %s %s\n\n";
+	const char* strTableNavigationArrow = "                -> %s\n                   %s %s\n\n";
 	const char* strSelecionarConcelho = "SELECIONAR CONCELHO";
 	const char* strSelecionarDistrito = "SELECIONAR DISTRITO";
 	const char* strSelecionarRua = "SELECIONAR RUA";
