@@ -1,2 +1,2 @@
-# cal-proj1
-Concepção e Análise de Algoritmos - 2014/2015
+# feup-cal
+Concepção e Análise de Algoritmos - MIEIC 2014/2015
